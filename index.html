@@ -318,6 +318,30 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 .mk-lbl{transform:translate(-50%,-130%)}
 .rlbl{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:12px;white-space:nowrap;background:linear-gradient(135deg,#10C98F,#12A9CC);color:#03110E;font-size:12px;font-weight:800;box-shadow:0 10px 24px -8px rgba(0,0,0,.8)}
 .rlbl b{font-family:Sora,sans-serif;font-size:13px} .rlbl span{opacity:.75}
+
+.apil{display:flex;flex-direction:column;gap:8px}
+.apr{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.apr .st{font-size:18px;line-height:1.2} .apr b{display:block;font-size:14px} .apr small{display:block;font-size:12.5px;color:var(--mut);margin-top:2px;word-break:break-word}
+.apr em{display:block;font-style:normal;font-size:12px;color:#ffd38a;margin-top:6px;line-height:1.45}
+.apr.ok{border-color:rgba(16,201,143,.35);background:rgba(16,201,143,.07)} .apr.bad{border-color:rgba(229,51,75,.35);background:rgba(229,51,75,.06)}
+.map-fail small{max-width:340px;line-height:1.5}
+.map-fail{justify-content:flex-start!important;padding-top:calc(128px + var(--safe-t))!important}
+
+.cl small.pk{color:var(--em);font-weight:800;font-size:11.5px;margin-top:3px}
+.ri .km{color:var(--mut2)}
+
+.phero{text-align:center;margin:-4px 0 14px}
+.phero img{width:72px;height:72px;border-radius:22px;box-shadow:0 14px 34px -12px rgba(16,201,143,.8)}
+.phero p{color:var(--mut);font-size:13.5px;line-height:1.5;margin:12px 6px 0}
+.pr{display:flex;align-items:center;gap:12px;padding:13px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid var(--line);margin-bottom:9px}
+.pr .pe{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(16,201,143,.12);flex-shrink:0}
+.pr .pt{flex:1;min-width:0} .pr b{display:block;font-size:14.5px} .pr small{display:block;font-size:12px;color:var(--mut);margin-top:2px;line-height:1.4}
+.pb{flex-shrink:0;padding:9px 12px;border-radius:12px;background:var(--grad);color:#03110E;font-weight:800;font-size:12.5px}
+.pb:disabled{opacity:1}
+.pr.granted{border-color:rgba(16,201,143,.45);background:rgba(16,201,143,.07)} .pr.granted .pb{background:rgba(16,201,143,.16);color:var(--em)}
+.pr.denied{border-color:rgba(229,51,75,.4)} .pr.denied .pb{background:var(--grad-bordo);color:#fff}
+.pr.unsupported .pb{background:rgba(255,255,255,.06);color:var(--mut)}
+.phelp{font-size:12.5px;line-height:1.6;color:#ffd38a;background:rgba(243,201,105,.08);border:1px solid rgba(243,201,105,.3);border-radius:14px;padding:12px;margin:4px 0 6px}
 </style>
 </head>
 <body>
@@ -331,7 +355,7 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
   <div class="brand"><div class="wm" id="wm"><img src="icon-192.png" alt=""><span>Baku<b>Go</b></span></div><div class="rate-chip hidden" id="rateChip"><span class="dot"></span><span id="rateTxt">Tarif yüklənir…</span></div></div>
   <button class="cbtn" id="shareBtn" aria-label="Yerimi paylaş"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg></button>
 </div>
-<button class="mapnote hidden" id="mapNote">🗺 Ehtiyat xəritə · səbəbi gör</button>
+<button class="mapnote hidden" id="mapNote">🔑 Google API problemi · yoxla</button>
 <button class="cbtn locate" id="locBtn" aria-label="Mənim yerim"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5"/></svg></button>
 
 <!-- ALT PANEL -->
@@ -443,6 +467,8 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
   <button class="mi" data-go="safety"><span class="e">🛡️</span>Təhlükəsizlik</button>
   <button class="mi" data-go="mapstyle"><span class="e">🌗</span>Xəritə: <span id="msT">Gecə</span></button>
   <button class="mi" data-go="install"><span class="e">📲</span>Tətbiqi quraşdır</button>
+  <button class="mi" data-go="perms"><span class="e">📍</span>İcazələr (yer, bildiriş)</button>
+  <button class="mi" data-go="apicheck"><span class="e">🔑</span>Google API yoxlaması</button>
   <button class="mi" data-go="support"><span class="e">💬</span>Dəstək</button>
   <button class="mi out" data-go="logout" id="miOut"><span class="e">🚪</span>Çıxış</button>
   <div class="dfoot">BakuGo Taksi · v3.0 · <a class="lnk" href="privacy-policy.html" target="_blank">Gizlilik</a></div>
@@ -450,154 +476,6 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 
 <div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
-<script>
-/* BakuGo ehtiyat xəritəsi — Google Maps açarı işləməsə, eyni API ilə (Map, OverlayView, Polyline…) OpenStreetMap/CARTO plitələri üzərində işləyir.
-   Tətbiq kodu dəyişmədən işləsin deyə google.maps-in lazım olan hissəsini təqlid edir. */
-(function () {
-  const TS = 256, PI = Math.PI;
-  const X = (lng, z) => (lng + 180) / 360 * TS * 2 ** z;
-  const Y = (lat, z) => { const s = Math.sin(Math.max(-85, Math.min(85, lat)) * PI / 180); return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * PI)) * TS * 2 ** z; };
-  const LNG = (x, z) => x / (TS * 2 ** z) * 360 - 180;
-  const LAT = (y, z) => { const n = PI - 2 * PI * y / (TS * 2 ** z); return 180 / PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))); };
-  const isDark = (bg) => { const m = /^#?([0-9a-f]{6})$/i.exec(bg || ""); if (!m) return true; const v = parseInt(m[1], 16); return ((v >> 16) * 0.3 + ((v >> 8) & 255) * 0.59 + (v & 255) * 0.11) < 128; };
-
-  class LatLng { constructor(a, b) { if (typeof a === "object") { this._a = +(typeof a.lat === "function" ? a.lat() : a.lat); this._b = +(typeof a.lng === "function" ? a.lng() : a.lng); } else { this._a = +a; this._b = +b; } } lat() { return this._a; } lng() { return this._b; } toJSON() { return { lat: this._a, lng: this._b }; } }
-  const ll = (p) => (p instanceof LatLng ? p : new LatLng(p));
-
-  class LatLngBounds { constructor() { this.n = -90; this.s = 90; this.e = -180; this.w = 180; } extend(p) { p = ll(p); this.n = Math.max(this.n, p.lat()); this.s = Math.min(this.s, p.lat()); this.e = Math.max(this.e, p.lng()); this.w = Math.min(this.w, p.lng()); return this; } }
-
-  class Map {
-    constructor(el, o) {
-      this.el = el; el.innerHTML = ""; el.classList.add("mm");
-      this.c = { lat: o.center.lat, lng: o.center.lng }; this.z = o.zoom || 14; this.L = {}; this.ovs = new Set(); this.lines = new Set(); this.tiles = new globalThis.Map();
-      this.tl = this.d("mm-tiles"); this.sv = document.createElementNS("http://www.w3.org/2000/svg", "svg"); this.sv.setAttribute("class", "mm-svg"); el.appendChild(this.sv);
-      this.ov = this.d("mm-ov");
-      const at = this.d("mm-attr"); at.innerHTML = "© OpenStreetMap · © CARTO";
-      this.setOptions(o); this.gest(); this.draw();
-      new ResizeObserver(() => this.draw()).observe(el);
-    }
-    d(c) { const x = document.createElement("div"); x.className = c; this.el.appendChild(x); return x; }
-    get W() { return this.el.clientWidth || innerWidth; } get H() { return this.el.clientHeight || innerHeight; }
-    setOptions(o) { if (o.backgroundColor !== undefined) { this.dark = isDark(o.backgroundColor); this.el.classList.toggle("mm-day", !this.dark); this.tiles.forEach((t) => t.remove()); this.tiles.clear(); this.draw(); } }
-    addListener(n, f) { (this.L[n] = this.L[n] || []).push(f); return { remove: () => { this.L[n] = this.L[n].filter((x) => x !== f); } }; }
-    emit(n) { (this.L[n] || []).forEach((f) => { try { f(); } catch (e) { console.error(e); } }); }
-    getCenter() { return new LatLng(this.c.lat, this.c.lng); }
-    getZoom() { return this.z; }
-    setZoom(z) { this.z = Math.max(3, Math.min(19, Math.round(z))); this.draw(); this.idle(); }
-    setCenter(p) { p = ll(p); this.c = { lat: p.lat(), lng: p.lng() }; this.draw(); this.idle(); }
-    px(p) { p = ll(p); return { x: X(p.lng(), this.z) - X(this.c.lng, this.z) + this.W / 2, y: Y(p.lat(), this.z) - Y(this.c.lat, this.z) + this.H / 2 }; }
-    moveBy(dx, dy) { const cx = X(this.c.lng, this.z) + dx, cy = Y(this.c.lat, this.z) + dy; this.c = { lat: LAT(cy, this.z), lng: LNG(cx, this.z) }; }
-    anim(to, ms) {
-      cancelAnimationFrame(this.af); const f = { ...this.c }, t0 = performance.now();
-      const st = (now) => { const k = Math.min(1, (now - t0) / ms), e = 1 - (1 - k) ** 3; this.c = { lat: f.lat + (to.lat - f.lat) * e, lng: f.lng + (to.lng - f.lng) * e }; this.draw(); if (k < 1) this.af = requestAnimationFrame(st); else this.idle(); };
-      this.af = requestAnimationFrame(st);
-    }
-    panTo(p) { p = ll(p); this.anim({ lat: p.lat(), lng: p.lng() }, 380); }
-    panBy(dx, dy) { const z = this.z, cx = X(this.c.lng, z) + dx, cy = Y(this.c.lat, z) + dy; this.anim({ lat: LAT(cy, z), lng: LNG(cx, z) }, 260); }
-    fitBounds(b, pad) {
-      pad = typeof pad === "number" ? { top: pad, bottom: pad, left: pad, right: pad } : (pad || { top: 40, bottom: 40, left: 40, right: 40 });
-      const aw = Math.max(60, this.W - pad.left - pad.right), ah = Math.max(60, this.H - pad.top - pad.bottom);
-      let z = 18; while (z > 3 && (X(b.e, z) - X(b.w, z) > aw || Y(b.s, z) - Y(b.n, z) > ah)) z--;
-      this.z = z;
-      const mx = (X(b.e, z) + X(b.w, z)) / 2 + (pad.right - pad.left) / 2, my = (Y(b.s, z) + Y(b.n, z)) / 2 + (pad.bottom - pad.top) / 2;
-      this.c = { lat: LAT(my, z), lng: LNG(mx, z) }; this.draw(); this.idle();
-    }
-    idle() { clearTimeout(this.it); this.it = setTimeout(() => this.emit("idle"), 120); }
-    url(z, x, y) { const s = "abcd"[(x + y) % 4]; return this.dark ? `https://${s}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png` : `https://${s}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}@2x.png`; }
-    draw() {
-      if (this.raf) return;
-      this.raf = requestAnimationFrame(() => { this.raf = 0; this.render(); });
-    }
-    render() {
-      const z = this.z, W = this.W, H = this.H, cx = X(this.c.lng, z), cy = Y(this.c.lat, z), n = 2 ** z;
-      const x0 = Math.floor((cx - W / 2) / TS), x1 = Math.floor((cx + W / 2) / TS), y0 = Math.max(0, Math.floor((cy - H / 2) / TS)), y1 = Math.min(n - 1, Math.floor((cy + H / 2) / TS));
-      const keep = new Set();
-      for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
-        const wx = ((x % n) + n) % n, k = z + "/" + x + "/" + y; keep.add(k);
-        let t = this.tiles.get(k);
-        if (!t) { t = new Image(); t.className = "mm-t"; t.draggable = false; t.decoding = "async"; t.onload = () => t.classList.add("on"); t.src = this.url(z, wx, y); this.tl.appendChild(t); this.tiles.set(k, t); }
-        t.style.transform = `translate(${Math.round(x * TS - cx + W / 2)}px,${Math.round(y * TS - cy + H / 2)}px)`;
-      }
-      this.tiles.forEach((t, k) => { if (!keep.has(k)) { if (+k.split("/")[0] !== z || this.tiles.size > 160) { t.remove(); this.tiles.delete(k); } else t.style.transform = "translate(-9999px,0)"; } });
-      this.sv.setAttribute("width", W); this.sv.setAttribute("height", H);
-      this.lines.forEach((l) => l.render()); this.ovs.forEach((o) => { try { o.draw(); } catch (e) {} });
-    }
-    zoomAt(nz, sx, sy) {
-      nz = Math.max(3, Math.min(19, nz)); if (nz === this.z) return;
-      const z = this.z, px = X(this.c.lng, z) + sx - this.W / 2, py = Y(this.c.lat, z) + sy - this.H / 2;
-      const at = { lat: LAT(py, z), lng: LNG(px, z) }; this.z = nz;
-      const ax = X(at.lng, nz), ay = Y(at.lat, nz); this.c = { lat: LAT(ay - sy + this.H / 2, nz), lng: LNG(ax - sx + this.W / 2, nz) };
-      this.tl.style.transform = ""; this.draw(); this.idle();
-    }
-    gest() {
-      const el = this.el, P = new globalThis.Map(); let last = null, pinch = null, moved = false, lastTap = 0;
-      el.style.touchAction = "none";
-      const pos = (e) => { const r = el.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
-      el.addEventListener("pointerdown", (e) => {
-        if (e.target.closest && e.target.closest(".mk")) return;
-        el.setPointerCapture && el.setPointerCapture(e.pointerId); P.set(e.pointerId, pos(e)); cancelAnimationFrame(this.af);
-        if (P.size === 1) { last = pos(e); moved = false; }
-        if (P.size === 2) { const [a, b] = [...P.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), m: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, s: 1 }; }
-      });
-      el.addEventListener("pointermove", (e) => {
-        if (!P.has(e.pointerId)) return; const p = pos(e); P.set(e.pointerId, p);
-        if (P.size === 2 && pinch) { const [a, b] = [...P.values()]; pinch.s = Math.hypot(a.x - b.x, a.y - b.y) / pinch.d; this.tl.style.transformOrigin = pinch.m.x + "px " + pinch.m.y + "px"; this.tl.style.transform = `scale(${pinch.s})`; return; }
-        if (P.size === 1 && last) { const dx = p.x - last.x, dy = p.y - last.y; if (!moved && Math.hypot(dx, dy) < 3) return; if (!moved) { moved = true; this.emit("dragstart"); } this.moveBy(-dx, -dy); last = p; this.draw(); }
-      });
-      const up = (e) => {
-        if (!P.has(e.pointerId)) return; P.delete(e.pointerId);
-        if (pinch && P.size < 2) { const dz = Math.round(Math.log2(pinch.s)); const m = pinch.m; pinch = null; this.tl.style.transform = ""; if (dz) this.zoomAt(this.z + dz, m.x, m.y); last = null; return; }
-        if (P.size === 0) {
-          if (moved) { this.emit("dragend"); this.idle(); }
-          else { const now = Date.now(), p = pos(e); if (now - lastTap < 300) this.zoomAt(this.z + 1, p.x, p.y); lastTap = now; }
-          last = null;
-        }
-      };
-      el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
-      el.addEventListener("wheel", (e) => { e.preventDefault(); clearTimeout(this.wt); this.wa = (this.wa || 0) + e.deltaY; this.wt = setTimeout(() => { const p = pos(e); this.zoomAt(this.z + (this.wa < 0 ? 1 : -1), p.x, p.y); this.wa = 0; }, 60); }, { passive: false });
-    }
-  }
-
-  class OverlayView {
-    setMap(m) {
-      if (this.map && this.map !== m) { this.map.ovs.delete(this); this.onRemove && this.onRemove(); this.map = null; }
-      if (m && !this.map) { this.map = m; m.ovs.add(this); this.onAdd && this.onAdd(); this.draw && this.draw(); }
-    }
-    getMap() { return this.map; }
-    getPanes() { const p = this.map.ov; return { overlayMouseTarget: p, overlayLayer: p, floatPane: p, markerLayer: p }; }
-    getProjection() { const m = this.map; return m ? { fromLatLngToDivPixel: (p) => m.px(p) } : null; }
-  }
-
-  class Polyline {
-    constructor(o) { this.o = { ...o }; this.p = document.createElementNS("http://www.w3.org/2000/svg", "path"); this.p.setAttribute("fill", "none"); this.p.setAttribute("stroke-linecap", "round"); this.p.setAttribute("stroke-linejoin", "round"); if (o.map) this.setMap(o.map); }
-    get(k) { return this.o[k]; }
-    set(k, v) { this.o[k] = v; this.render(); }
-    setMap(m) { if (this.m) { this.m.lines.delete(this); this.p.remove(); } this.m = m || null; if (m) { m.lines.add(this); const kids = [...m.sv.childNodes].filter((n) => +n.dataset.z > (this.o.zIndex || 0)); m.sv.insertBefore(this.p, kids[0] || null); this.p.dataset.z = this.o.zIndex || 0; this.render(); } }
-    render() {
-      const m = this.m; if (!m) return; const o = this.o;
-      this.p.setAttribute("d", (o.path || []).map((q, i) => { const s = m.px(q); return (i ? "L" : "M") + s.x.toFixed(1) + " " + s.y.toFixed(1); }).join(""));
-      const ic = o.icons && o.icons[0];
-      if (ic) {
-        const sc = (ic.icon && ic.icon.scale) || 2, rep = parseFloat(ic.repeat) || 18;
-        this.p.setAttribute("stroke", (ic.icon && ic.icon.strokeColor) || "#fff"); this.p.setAttribute("stroke-width", sc * 1.1); this.p.setAttribute("stroke-opacity", 0.95);
-        this.p.setAttribute("stroke-dasharray", `${sc * 2} ${rep - sc * 2}`); this.p.setAttribute("stroke-dashoffset", -parseFloat(ic.offset || 0));
-      } else {
-        this.p.setAttribute("stroke", o.strokeColor || "#12A9CC"); this.p.setAttribute("stroke-width", o.strokeWeight || 4); this.p.setAttribute("stroke-opacity", o.strokeOpacity == null ? 1 : o.strokeOpacity);
-      }
-    }
-  }
-
-  const fail = () => Promise.reject(new Error("ehtiyat xəritə"));
-  class Geocoder { geocode() { return fail(); } }
-  class DirectionsService { route() { return fail(); } }
-
-  window.BGMini = {
-    install() {
-      window.google = { maps: { Map, OverlayView, Polyline, LatLngBounds, LatLng, Geocoder, DirectionsService, event: { trigger() {} }, importLibrary: fail, __mini: true } };
-    }
-  };
-})();
-</script>
 <script type="module">
 /* =====================================================================
    BakuGo Taksi — müştəri tətbiqi
@@ -692,15 +570,21 @@ function paintRate() {
 }
 setInterval(paintRate, 60000);
 
-/* Hava: Open-Meteo (açarsız, pulsuz). Yağış varsa 1.8 tarif avtomatik qüvvəyə minir */
+/* Hava: Google Weather API (sizin açar). Yağış varsa 1.8 tarif avtomatik qüvvəyə minir */
+async function googleWeather(p) {
+  const r = await fetch(`https://weather.googleapis.com/v1/currentConditions:lookup?key=${GMAPS_KEY}&location.latitude=${p.lat}&location.longitude=${p.lng}&languageCode=az`);
+  const j = await r.json(); if (!r.ok) throw new Error((j.error && (j.error.status + ": " + j.error.message)) || "HTTP " + r.status);
+  return j;
+}
 async function checkRain() {
   const p = S.pos || BAKU;
   try {
-    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lng}&current=precipitation,rain,showers,weather_code`);
-    const j = await r.json(); const c = j.current || {};
-    const code = +c.weather_code || 0;
-    S.raining = (+c.rain > 0) || (+c.showers > 0) || (+c.precipitation > 0.05) || (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
-  } catch (e) { /* hava alınmasa standart tarif */ }
+    const j = await googleWeather(p);
+    const t = String((j.weatherCondition && j.weatherCondition.type) || "").toUpperCase();
+    const q = +(((j.precipitation || {}).qpf || {}).quantity || 0);
+    S.raining = /RAIN|SHOWER|DRIZZLE|THUNDER|SLEET/.test(t) || q > 0.05;
+    S.wx = { ok: true, t, temp: j.temperature && j.temperature.degrees };
+  } catch (e) { S.wx = { ok: false, err: e.message || String(e) }; console.warn("Google Weather API:", e.message || e); }
   paintRate(); if (S.view === "opts") renderOpts();
 }
 setInterval(checkRain, 10 * 60 * 1000);
@@ -759,18 +643,12 @@ const G_WHY = {
   ExpiredKeyMapError: "Google Maps açarının müddəti bitib.",
   MissingKeyMapError: "Google Maps açarı göndərilmədi."
 };
-const FB_KEY = "bgtMapFb";
-function fbActive() { try { const v = JSON.parse(localStorage.getItem(FB_KEY) || "null"); return v && Date.now() - v.t < 20 * 60000 ? v : null; } catch (e) { return null; } }
-window.gm_authFailure = () => {
-  const why = G_WHY[S.gErr] || "Google Maps açarı bu saytda qəbul olunmadı.";
-  try { localStorage.setItem(FB_KEY, JSON.stringify({ t: Date.now(), code: S.gErr || "", why })); } catch (e) {}
-  if (!fbActive()) { useMini(why); return; }
-  location.reload();
-};
+window.gm_authFailure = () => { mapFail(G_WHY[S.gErr] || "Google Maps açarı bu saytda qəbul olunmadı."); };
 function mapFail(msg) {
-  mapsOK = false;
+  mapsOK = false; S.mapWhy = msg; $("mapNote").classList.remove("hidden");
+  setTimeout(() => { if (S.view === "home") sheetMode("mini"); }, 50);
   const d = document.createElement("div"); d.className = "map-fail";
-  d.innerHTML = `<div style="font-size:42px">🗺️</div><b>Xəritə yüklənmədi</b><small>${esc(msg)}</small>`;
+  d.innerHTML = `<div style="font-size:42px">🗺️</div><b>Google xəritəsi açılmadı</b><small>${esc(msg)}</small><button class="cta" style="max-width:280px;margin-top:14px;pointer-events:auto" onclick="window.__apiCheck()">🔑 Google API-ni yoxla</button>`;
   $("map").innerHTML = ""; $("map").appendChild(d);
 }
 function loadMaps() {
@@ -793,16 +671,7 @@ function defOverlay() {
     setPos(p) { this.pos = p; this.draw(); }
   };
 }
-function useMini(why) {
-  S.mapWhy = why; S.mini = true;
-  if (!window.BGMini) { mapFail(why); return; }
-  window.BGMini.install(); map = null; placesNew = false;
-  defOverlay(); buildMap(); placeMe(); if (S.route) drawRoute();
-  const n = $("mapNote"); n.classList.remove("hidden");
-}
 async function initMap() {
-  const fb = fbActive();
-  if (fb) { useMini(fb.why); return; }
   try {
     await loadMaps();
     /* loading=async rejimində siniflər importLibrary ilə gəlir — əks halda Map/OverlayView boş ola bilər və xəritə görünmür */
@@ -810,7 +679,7 @@ async function initMap() {
     if (!google.maps.Map || !google.maps.OverlayView) throw new Error("Google Maps kitabxanası tam yüklənmədi");
     defOverlay();
     buildMap();
-  } catch (e) { console.warn(e); useMini((e && e.message) || "Google Maps yüklənmədi"); return; }
+  } catch (e) { console.warn(e); mapFail((e && e.message) || "Google Maps yüklənmədi"); return; }
 }
 function buildMap() {
   map = new google.maps.Map($("map"), {
@@ -881,16 +750,13 @@ async function reverse(p) {
       const best = (r.results || []).find((x) => !(x.types || []).includes("plus_code")) || (r.results || [])[0];
       if (best) return shortAddr(best.formatted_address);
     }
-  } catch (e) {}
-  try {
-    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${p.lat}&lon=${p.lng}&zoom=18&accept-language=az`);
-    const j = await r.json(); const a = j.address || {};
-    return [a.road, a.house_number].filter(Boolean).join(" ") || (j.display_name || "").split(",").slice(0, 2).join(",") || "";
-  } catch (e) { return ""; }
+  } catch (e) { console.warn("Google Geocoding API:", e.message || e); }
+  return "";
 }
 let placesNew = true, sessTok = null, PL = null;
 async function suggest(q) {
-  const near = S.pos || BAKU, out = [];
+  /* məsafə götürülmə nöqtəsindən ölçülür (GPS yoxdursa — Bakı mərkəzi) */
+  const near = (sTarget !== "pick" && S.pick) ? { lat: S.pick.lat, lng: S.pick.lng } : (S.pos || BAKU), out = [];
   if (placesNew && mapsOK) {
     try {
       if (!PL) PL = await google.maps.importLibrary("places");
@@ -903,21 +769,19 @@ async function suggest(q) {
         const p = s.placePrediction; if (!p) continue;
         out.push({ main: p.mainText ? p.mainText.text : p.text.text, sub: p.secondaryText ? shortAddr(p.secondaryText.text) : "", dist: p.distanceMeters, pred: p });
       }
+      /* az nəticə gəlibsə — Google Text Search ilə əlavə axtarış (mağaza, restoran, bina adları) */
+      if (out.length < 4) {
+        try {
+          const { places } = await PL.Place.searchByText({ textQuery: q, fields: ["displayName", "formattedAddress", "location"], locationBias: { center: near, radius: 50000 }, region: "az", language: "az", maxResultCount: 8 });
+          for (const pl of places || []) {
+            const nm = pl.displayName || ""; if (!pl.location || out.some((x) => x.main === nm)) continue;
+            const loc = pl.location.toJSON(); out.push({ main: nm, sub: shortAddr(pl.formattedAddress || ""), dist: hav(near, loc) * 1000, loc });
+          }
+        } catch (e) { console.warn("Google Text Search:", e.message || e); }
+      }
       if (out.length) return out;
-    } catch (e) { console.warn("Places (New) işləmədi, ehtiyat axtarışa keçilir:", e.message); placesNew = false; }
+    } catch (e) { console.warn("Google Places API (New) işləmədi, Google Geocoding ilə axtarılır:", e.message); }
   }
-  try {
-    const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&lat=${near.lat}&lon=${near.lng}&limit=8&bbox=44.7,38.3,50.8,41.95`);
-    const j = await r.json();
-    for (const f of j.features || []) {
-      const p = f.properties || {}, c = (f.geometry || {}).coordinates || [];
-      const main = p.name || [p.street, p.housenumber].filter(Boolean).join(" ");
-      if (!main || c.length < 2) continue;
-      const sub = [p.street && p.name ? [p.street, p.housenumber].filter(Boolean).join(" ") : "", p.district || p.locality, p.city].filter(Boolean).join(", ");
-      const loc = { lat: c[1], lng: c[0] };
-      out.push({ main, sub, dist: hav(near, loc) * 1000, loc });
-    }
-  } catch (e) {}
   if (!out.length && geocoder) {
     try {
       const r = await geocoder.geocode({ address: q, componentRestrictions: { country: "AZ" }, language: "az" });
@@ -948,8 +812,8 @@ function decodePoly(str) {
   }
   return out;
 }
-/* Yol marşrutu — həmişə real yollarla (quş uçuşu YOX):
-   1) Google Routes API (sizin açar, tıxac nəzərə alınır)  2) Google Directions (köhnə)  3) OSRM  4) OSRM (Almaniya serveri) */
+/* Yol marşrutu — yalnız Google, real yollarla (quş uçuşu YOX):
+   1) Google Routes API (sizin açar, tıxac nəzərə alınır)  2) Google Directions API (köhnə) */
 async function routeGoogleNew(pts) {
   const wp = (p) => ({ location: { latLng: { latitude: p.lat, longitude: p.lng } } });
   const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
@@ -968,23 +832,11 @@ async function routeGoogleOld(pts) {
   const legs = r.routes[0].legs;
   return { km: legs.reduce((a, l) => a + l.distance.value, 0) / 1000, min: legs.reduce((a, l) => a + (l.duration_in_traffic || l.duration).value, 0) / 60, path: r.routes[0].overview_path.map((p) => p.toJSON()), src: "Google" };
 }
-async function routeOsrm(pts, base) {
-  const coords = pts.map((p) => p.lng.toFixed(6) + "," + p.lat.toFixed(6)).join(";");
-  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 9000);
-  try {
-    const r = await fetch(`${base}/${coords}?overview=full&geometries=geojson`, { signal: ctl.signal });
-    const j = await r.json(); const rt = (j.routes || [])[0]; if (!rt) throw new Error(j.message || "OSRM marşrut tapmadı");
-    /* OSRM tıxacı bilmir — Bakı şəhər hərəkəti üçün vaxtı 1.3 dəfə artırırıq (məsafə dəyişmir) */
-    return { km: rt.distance / 1000, min: rt.duration / 60 * 1.3, path: rt.geometry.coordinates.map((c) => ({ lat: c[1], lng: c[0] })), src: "OSM" };
-  } finally { clearTimeout(t); }
-}
 async function calcRoute() {
   const pts = [S.pick, ...S.stops.filter(Boolean), S.drop];
   const tries = [
     ["Google Routes", () => routeGoogleNew(pts)],
-    ["Google Directions", () => (mapsOK && !S.mini && google.maps.DirectionsService ? routeGoogleOld(pts) : Promise.reject(new Error("yoxdur")))],
-    ["OSRM", () => routeOsrm(pts, "https://router.project-osrm.org/route/v1/driving")],
-    ["OSRM-DE", () => routeOsrm(pts, "https://routing.openstreetmap.de/routed-car/route/v1/driving")]
+    ["Google Directions", () => (mapsOK && google.maps.DirectionsService ? routeGoogleOld(pts) : Promise.reject(new Error("Maps yüklənməyib")))]
   ];
   let res = null; S.routeErr = [];
   for (const [n, f] of tries) {
@@ -997,9 +849,9 @@ async function calcRoute() {
 }
 function routeFail() {
   clearRoute();
-  $("tripSum").innerHTML = `<span style="color:#ff8a9b">⚠️ Yol marşrutu hesablanmadı. İnterneti yoxlayın.</span>`;
-  $("clsList").innerHTML = `<button class="cta" id="rRetry" style="margin-top:0">🔄 Yenidən hesabla</button>`;
-  $("rRetry").onclick = () => goOptions();
+  $("tripSum").innerHTML = `<span style="color:#ff8a9b">⚠️ Google marşrutu hesablamadı (Routes API).</span>`;
+  $("clsList").innerHTML = `<button class="cta" id="rRetry" style="margin-top:0">🔄 Yenidən hesabla</button><button class="ghost" id="rChk">🔑 Google API-ni yoxla</button>`;
+  $("rRetry").onclick = () => goOptions(); $("rChk").onclick = () => apiCheck();
   $("orderBtn").disabled = true; $("orderPrice").textContent = "";
 }
 function clearRoute() {
@@ -1131,7 +983,7 @@ function renderOpts(fresh) {
   $("clsList").innerHTML = S.settings.classes.map((c) => {
     const p = priceFor(c, S.route.km, S.when ? new Date(S.when) : null);
     const eta = near ? Math.max(2, Math.round(3 + Math.random() * 4)) : null;
-    return `<button class="cl ${c.id === S.cls ? "on" : ""}" data-c="${c.id}">${carMini(c)}<span class="t"><b>${esc(c.name)} ${c.tag ? `<span class="tag">${esc(c.tag)}</span>` : ""}</b><small>${esc(c.desc)} · 👤${c.seats}${eta ? " · " + eta + " dəq" : ""}</small></span><span class="p"><b class="${fresh ? "pop" : ""}">${money(p.price)} ₼</b>${p.disc ? `<s>${money(p.full)} ₼</s>` : ""}</span></button>`;
+    return `<button class="cl ${c.id === S.cls ? "on" : ""}" data-c="${c.id}">${carMini(c)}<span class="t"><b>${esc(c.name)} ${c.tag ? `<span class="tag">${esc(c.tag)}</span>` : ""}</b><small>${esc(c.desc)} · 👤${c.seats}${eta ? " · " + eta + " dəq" : ""}</small><small class="pk">1 km = ${money(p.rate.perKm * (c.mult || 1))} ₼</small></span><span class="p"><b class="${fresh ? "pop" : ""}">${money(p.price)} ₼</b>${p.disc ? `<s>${money(p.full)} ₼</s>` : ""}</span></button>`;
   }).join("");
   $("clsList").querySelectorAll(".cl").forEach((b) => b.onclick = () => { S.cls = b.dataset.c; localStorage.setItem("bgtCls", S.cls); renderOpts(); });
   const cls = S.settings.classes.find((c) => c.id === S.cls) || S.settings.classes[0];
@@ -1205,7 +1057,7 @@ function renderResults(q, list) {
     el.innerHTML = it.length ? `<div class="sec-t">Son və saxlanmış</div>` + it.map((x, i) => `<button class="ri" data-i="${i}"><span class="ic">${x.e}</span><span><b>${esc(x.main)}</b><small>${esc(x.sub || "")}</small></span></button>`).join("") : `<div class="empty">Ünvan və ya məkan adını yazın.<br>Məs.: <b>28 Mall</b>, <b>Nizami küçəsi 10</b></div>`;
   } else {
     sItems = (list || []).map((x) => ({ ...x, e: "📍" }));
-    el.innerHTML = sItems.length ? sItems.map((x, i) => `<button class="ri" data-i="${i}"><span class="ic">📍</span><span><b>${esc(x.main)}</b><small>${esc(x.sub)}</small></span>${x.dist != null ? `<span class="km">${x.dist < 1000 ? Math.round(x.dist) + " m" : (x.dist / 1000).toFixed(1) + " km"}</span>` : ""}</button>`).join("") : `<div class="empty">Heç nə tapılmadı. Başqa cür yazın və ya <b>Xəritədə seç</b> düyməsini istifadə edin.</div>`;
+    el.innerHTML = sItems.length ? sItems.map((x, i) => `<button class="ri" data-i="${i}"><span class="ic">📍</span><span><b>${esc(x.main)}</b><small>${esc(x.sub)}</small></span>${x.dist != null ? `<span class="km">${x.dist < 1000 ? Math.round(x.dist) + " m" : "~" + (x.dist / 1000).toFixed(1) + " km"}</span>` : ""}</button>`).join("") : `<div class="empty">Heç nə tapılmadı. Başqa cür yazın və ya <b>Xəritədə seç</b> düyməsini istifadə edin.</div>`;
   }
   el.querySelectorAll(".ri").forEach((b) => b.onclick = () => choose(sItems[+b.dataset.i]));
 }
@@ -1251,12 +1103,42 @@ $("whereBtn").onclick = () => openSearch("drop");
 $("backHome").onclick = () => { clearRoute(); S.route = null; show("home"); renderHome(); if (S.pos) panTo(S.pos, 15); };
 $("locBtn").onclick = () => { if (!S.pos) { toast("GPS icazəsini yoxlayın"); startGeo(); return; } panTo(S.pos, 16); };
 $("fromBtn").onclick = () => openSearch("pick");
-$("mapNote").onclick = () => modal("Xəritə haqqında", `<p style="color:var(--mut);font-size:14px;line-height:1.55;margin:0 0 6px">Google Maps hazırda bu səhifədə açılmadı, ona görə tətbiq <b style="color:var(--ink)">ehtiyat xəritə</b> ilə işləyir. Yer, ünvan axtarışı, marşrut və qiymət normal hesablanır.</p>
-  <div class="hc" style="margin:12px 0"><b style="font-size:13px">Səbəb:</b><div style="font-size:13.5px;margin-top:6px;line-height:1.5">${esc(S.mapWhy || "—")}</div>${S.gErr ? `<small style="color:var(--mut2)">Kod: ${esc(S.gErr)}</small>` : ""}</div>
-  <p style="color:var(--mut);font-size:12.5px;margin:0">Düzəltdikdən sonra aşağıdakı düyməni basın.</p>
-  <button class="cta" id="gRetry">Google Maps-i yenidən yoxla</button>`, () => { $("gRetry").onclick = () => { localStorage.removeItem(FB_KEY); location.reload(); }; });
+$("mapNote").onclick = () => apiCheck();
 
-/* ---------------- Alt paneli barmaqla yuxarı / aşağı çəkmək ---------------- */
+/* ---------------- Google API yoxlaması: açarınızla hər xidməti real sorğu ilə yoxlayır ---------------- */
+const API_FIX = {
+  maps: "Google Cloud → APIs & Services → Library → \"Maps JavaScript API\" → Enable. Credentials → açar → Website restrictions: https://seymur048ibrahimov-wq.github.io/*",
+  places: "Library → \"Places API (New)\" → Enable (köhnə \"Places API\" yox, \"(New)\" olanı).",
+  geo: "Library → \"Geocoding API\" → Enable.",
+  routes: "Library → \"Routes API\" → Enable.",
+  dir: "Köhnə xidmətdir, yeni layihələrdə açılmaya bilər — Routes API işləyirsə, buna ehtiyac yoxdur.",
+  wx: "Library → \"Weather API\" → Enable. (İşləməsə yağış tarifi avtomatik qoşulmur, qalan hər şey işləyir.)"
+};
+async function apiCheck() {
+  const T = [
+    ["maps", "Maps JavaScript API", "Xəritə", async () => { if (!mapsOK || !map) throw new Error(S.mapWhy || S.gErr || "xəritə yüklənmədi"); return "xəritə açıldı"; }],
+    ["places", "Places API (New)", "Ünvan axtarışı", async () => { const L = await google.maps.importLibrary("places"); const { suggestions } = await L.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: "28 Mall", includedRegionCodes: ["az"] }); return (suggestions || []).length + " nəticə"; }],
+    ["geo", "Geocoding API", "Ünvanın adı", async () => { const r = await new google.maps.Geocoder().geocode({ location: BAKU }); const a = r.results && r.results[0]; if (!a) throw new Error("boş cavab"); return shortAddr(a.formatted_address); }],
+    ["routes", "Routes API", "Yol məsafəsi", async () => { const r = await routeGoogleNew([BAKU, { lat: 40.3797, lng: 49.8503 }]); return r.km.toFixed(1) + " km yolla"; }],
+    ["dir", "Directions API (köhnə)", "Ehtiyat marşrut", async () => { const r = await routeGoogleOld([BAKU, { lat: 40.3797, lng: 49.8503 }]); return r.km.toFixed(1) + " km"; }],
+    ["wx", "Weather API", "Yağış tarifi", async () => { const j = await googleWeather(S.pos || BAKU); return ((j.weatherCondition && j.weatherCondition.description && j.weatherCondition.description.text) || "hava alındı") + (j.temperature ? " · " + Math.round(j.temperature.degrees) + "°" : ""); }]
+  ];
+  modal("🔑 Google API yoxlaması", `<p style="color:var(--mut);font-size:13px;margin:0 0 10px">Açar: <b style="color:var(--ink)">${GMAPS_KEY.slice(0, 10)}…${GMAPS_KEY.slice(-4)}</b> · sayt: ${esc(location.origin)}</p><div class="apil" id="apiL">${T.map(([id, n, w]) => `<div class="apr" id="ap-${id}"><span class="st">⏳</span><div><b>${n}</b><small>${w} · yoxlanılır…</small></div></div>`).join("")}</div><button class="ghost" id="apiAgain">🔄 Yenidən yoxla</button>`, () => { $("apiAgain").onclick = () => apiCheck(); });
+  for (const [id, n, w, f] of T) {
+    const el = $("ap-" + id); if (!el) return;
+    try {
+      if (id !== "maps" && id !== "routes" && id !== "wx" && !(window.google && google.maps && google.maps.Geocoder)) throw new Error("Maps JavaScript API yüklənmədiyi üçün yoxlanmadı");
+      const v = await Promise.race([f(), new Promise((_, rj) => setTimeout(() => rj(new Error("15 saniyədə cavab yoxdur")), 15000))]);
+      el.className = "apr ok"; el.innerHTML = `<span class="st">✅</span><div><b>${n}</b><small>${w} · ${esc(v)}</small></div>`;
+    } catch (e) {
+      const m = String((e && e.message) || e || S.gErr || "xəta");
+      el.className = "apr bad"; el.innerHTML = `<span class="st">${id === "dir" ? "⚪" : "❌"}</span><div><b>${n}</b><small>${w} · ${esc(m.slice(0, 160))}</small><em>${esc(API_FIX[id])}</em></div>`;
+    }
+  }
+}
+window.__apiCheck = apiCheck;
+
+/* ---------------- Alt paneli/* ---------------- Alt paneli barmaqla yuxarı / aşağı çəkmək ---------------- */
 function sheetMode(m) {
   const sh = $("sheet"); sh.style.height = ""; sh.style.transition = "";
   sh.classList.toggle("mini", m === "mini"); requestAnimationFrame(placeLocate);
@@ -1458,8 +1340,55 @@ function watchRide(id) {
 function onStatus(a, b) {
   if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
   const msg = { accepted: "🚕 Sürücü tapıldı!", arrived: "📍 Sürücü sizi gözləyir", ongoing: "🛣 Səfər başladı. Xoş yol!", completed: "✅ Çatdınız", cancelled: S.ride && S.ride.cancelledBy === "driver" ? "Sürücü sifarişi ləğv etdi" : "Sifariş ləğv olundu", no_driver: "Yaxınlıqda boş sürücü tapılmadı" }[b];
-  if (msg) toast(msg, 3500);
+  if (msg) { toast(msg, 3500); sysNotify(msg); }
 }
+/* Tətbiq arxa fondadırsa — telefon bildirişi */
+function sysNotify(msg) {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted" || !document.hidden) return;
+    const o = { body: msg, icon: "icon-192.png", badge: "icon-96.png", tag: "bgt-ride", renotify: true, vibrate: [120, 60, 120] };
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then((r) => r.showNotification("BakuGo Taksi", o)).catch(() => new Notification("BakuGo Taksi", o));
+    else new Notification("BakuGo Taksi", o);
+  } catch (e) {}
+}
+
+/* ---------------- İcazələr: yer + bildiriş (kuryer tətbiqindəki kimi) ---------------- */
+async function permState(name) { try { return (await navigator.permissions.query({ name })).state; } catch (e) { return "prompt"; } }
+function notifState() { return !("Notification" in window) ? "unsupported" : Notification.permission === "default" ? "prompt" : Notification.permission; }
+async function permFlow(force) {
+  const geo = navigator.geolocation ? await permState("geolocation") : "unsupported", nt = notifState();
+  if (geo === "granted") startGeo();
+  if (!force && geo === "granted" && nt !== "prompt") return;
+  if (!force && geo === "granted" && localStorage.getItem("bgtPermSeen")) return;
+  const row = (id, e, t, d, st) => {
+    const lbl = st === "granted" ? "✓ Verildi" : st === "denied" ? "Bağlıdır" : st === "unsupported" ? "Dəstəklənmir" : "İcazə ver";
+    return `<div class="pr ${st}" id="pr-${id}"><span class="pe">${e}</span><div class="pt"><b>${t}</b><small>${d}</small></div><button class="pb" id="pb-${id}" ${st === "granted" || st === "unsupported" ? "disabled" : ""}>${lbl}</button></div>`;
+  };
+  const howTo = `<div class="phelp" id="pHelp" style="display:none"><b>İcazə bağlanıb — belə açın:</b><br>• <b>Android Chrome:</b> ünvan sətrindəki 🔒 (və ya ⋮ → ℹ️) → <b>İcazələr</b> → <b>Yer</b> → <b>İcazə ver</b><br>• <b>Quraşdırılmış tətbiq:</b> Parametrlər → Tətbiqlər → BakuGo Taksi → İcazələr → <b>Yer</b> → "Tətbiq istifadə edilərkən"<br>• <b>iPhone:</b> Parametrlər → Məxfilik → Yer xidmətləri → Safari → "İstifadə zamanı"<br>Sonra səhifəni yeniləyin.</div>`;
+  modal("Xoş gəlmisiniz 👋", `<div class="phero"><img src="icon-192.png" alt=""><p>Sizi tez tapmaq və sürücünün harada olduğunu göstərmək üçün iki icazə lazımdır.</p></div>
+    ${row("geo", "📍", "Yer (GPS)", "Götürülmə nöqtəniz avtomatik tapılsın, sürücü sizi asan tapsın", geo)}
+    ${row("nt", "🔔", "Bildirişlər", "\"Sürücü tapıldı\", \"Sürücü gəldi\" xəbərləri tətbiq bağlı olanda da gəlsin", nt)}
+    ${howTo}
+    <button class="cta" id="pGo">${geo === "granted" ? "Davam et" : "İcazələri ver və başla"}</button>
+    <button class="ghost" id="pSkip">Sonra</button>`, () => {
+    const done = () => { localStorage.setItem("bgtPermSeen", "1"); closeModal(); };
+    const askGeo = () => new Promise((res) => {
+      const b = $("pb-geo"); if (b) { b.textContent = "Gözləyin…"; b.disabled = true; }
+      navigator.geolocation.getCurrentPosition(() => { setRow("geo", "granted"); startGeo(); res(true); },
+        (er) => { const den = er && er.code === 1; setRow("geo", den ? "denied" : "prompt"); if (den) $("pHelp").style.display = "block"; else toast("GPS tapılmadı — açıq havada / GPS açıq olaraq yenə yoxlayın"); res(false); },
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    });
+    const askNt = async () => { if (notifState() !== "prompt") return; try { const r = await Notification.requestPermission(); setRow("nt", r === "default" ? "prompt" : r); } catch (e) {} };
+    const setRow = (id, st) => { if (id === "geo") permStateSync.geo = st; const el = $("pr-" + id), b = $("pb-" + id); if (!el) return; el.className = "pr " + st; b.textContent = st === "granted" ? "✓ Verildi" : st === "denied" ? "Bağlıdır" : "İcazə ver"; b.disabled = st === "granted"; };
+    if ($("pb-geo")) $("pb-geo").onclick = () => (permStateSync.geo === "denied" ? ($("pHelp").style.display = "block") : askGeo());
+    if ($("pb-nt")) $("pb-nt").onclick = () => (notifState() === "denied" ? ($("pHelp").style.display = "block") : askNt());
+    $("pGo").onclick = async () => { let ok = true; if (permStateSync.geo !== "granted") ok = await askGeo(); await askNt(); if (ok) done(); };
+    $("pSkip").onclick = () => { done(); if (permStateSync.geo !== "granted") noGeo(); };
+    if (geo === "denied") $("pHelp").style.display = "block";
+  });
+  permStateSync.geo = geo;
+}
+const permStateSync = {};
 function endRide() {
   if (rideUnsub) { rideUnsub(); rideUnsub = null; } if (drvUnsub) { drvUnsub(); drvUnsub = null; }
   clearInterval(findTimer); clearInterval(tick);
@@ -1581,6 +1510,8 @@ document.querySelectorAll(".mi").forEach((b) => b.onclick = async () => {
   if (g === "safety") $("aSos").onclick();
   if (g === "mapstyle") { S.mapDark = !S.mapDark; localStorage.setItem("bgtMap", S.mapDark ? "dark" : "day"); setMapStyle(); drawRoute(); }
   if (g === "install") { if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; } else if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) toast("✅ Tətbiq artıq quraşdırılıb"); else toast(/iphone|ipad/i.test(navigator.userAgent) ? "Safari: Paylaş ⬆️ → «Ana ekrana əlavə et»" : "Brauzer menyusu ⋮ → «Tətbiqi quraşdır»", 5000); }
+  if (g === "apicheck") apiCheck();
+  if (g === "perms") permFlow(true);
   if (g === "support") open(`https://wa.me/${S.settings.whatsapp}?text=${encodeURIComponent("Salam, BakuGo Taksi ilə bağlı sualım var")}`, "_blank");
   if (g === "logout") { await signOut(auth); toast("Hesabdan çıxdınız"); }
 });
@@ -1615,7 +1546,7 @@ async function loadSettings() {
 /* ---------------- Başlanğıc ---------------- */
 paintRate(); renderHome(); paintMe(); show("home");
 initMap().then(() => { if (S.pos) panTo(S.pos, 16); });
-startGeo(); loadSettings();
+permFlow(); loadSettings();
 if (S.rideId && !S.me) { /* giriş gələndə watchRide çağırılacaq */ }
 setTimeout(() => $("splash").classList.add("off"), 1100);
 setTimeout(() => $("splash").remove(), 1800);
