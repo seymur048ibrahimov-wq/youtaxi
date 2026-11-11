@@ -287,6 +287,33 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 .mk-car.runner{transition:none;width:40px;height:40px}
 .mk-car.runner .rc{transition:opacity .4s;filter:drop-shadow(0 0 10px rgba(16,201,143,.95))}
 .mk-car.runner::before{content:"";position:absolute;inset:4px;border-radius:50%;background:radial-gradient(rgba(16,201,143,.45),transparent 70%)}
+
+/* ===== v3: panel sürüşdürmə, ehtiyat xəritə, götürülmə ===== */
+.sheet{transition:transform .4s cubic-bezier(.2,.8,.2,1),height .32s cubic-bezier(.2,.8,.2,1)}
+.sb{flex:1 1 auto;min-height:0;overscroll-behavior:contain;touch-action:pan-y}
+.grab{position:relative;cursor:grab}
+.grab::after{content:"";position:absolute;left:-140px;right:-140px;top:-12px;bottom:-14px}
+.sheet.mini{height:168px}
+.sheet.mini .sb{overflow:hidden}
+.sheet.mini .grab{background:var(--em);box-shadow:0 0 12px var(--em)}
+.from{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 10px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid var(--line);text-align:left}
+.from .d{width:14px;height:14px;border-radius:50%;border:3px solid var(--em);flex:0 0 14px;box-shadow:0 0 0 4px rgba(16,201,143,.15)}
+.from.gps .d{background:var(--em);animation:pls 1.8s infinite}
+.from .t{flex:1;min-width:0} .from small{display:block;font-size:11px;color:var(--mut2);font-weight:700}
+.from b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.from .ed{font-size:12px;font-weight:800;color:var(--em)}
+.mapnote{position:fixed;left:50%;transform:translateX(-50%);top:calc(68px + var(--safe-t));z-index:9;padding:7px 12px;border-radius:999px;font-size:11.5px;font-weight:800;color:#ffd38a;background:rgba(40,28,8,.82);border:1px solid rgba(243,201,105,.4);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+/* ehtiyat xəritə */
+.mm{position:fixed;inset:0;overflow:hidden;background:#10272a;user-select:none;-webkit-user-select:none}
+.mm.mm-day{background:#f3f1ea}
+.mm-tiles{position:absolute;inset:0;filter:sepia(.35) hue-rotate(118deg) saturate(1.9) brightness(1.18) contrast(1.05)}
+.mm.mm-day .mm-tiles{filter:none}
+.mm-t{position:absolute;left:0;top:0;width:256px;height:256px;opacity:0;transition:opacity .25s;pointer-events:none;will-change:transform}
+.mm-t.on{opacity:1}
+.mm-svg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.mm-ov{position:absolute;left:0;top:0;width:0;height:0}
+.mm-attr{position:absolute;right:6px;bottom:4px;font-size:9.5px;color:rgba(255,255,255,.45);pointer-events:none;z-index:1}
+.mm.mm-day .mm-attr{color:rgba(0,0,0,.45)}
 </style>
 </head>
 <body>
@@ -300,6 +327,7 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
   <div class="brand"><div class="wm" id="wm"><img src="icon-192.png" alt=""><span>Baku<b>Go</b></span></div><div class="rate-chip hidden" id="rateChip"><span class="dot"></span><span id="rateTxt">Tarif yüklənir…</span></div></div>
   <button class="cbtn" id="shareBtn" aria-label="Yerimi paylaş"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg></button>
 </div>
+<button class="mapnote hidden" id="mapNote">🗺 Ehtiyat xəritə · səbəbi gör</button>
 <button class="cbtn locate" id="locBtn" aria-label="Mənim yerim"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5"/></svg></button>
 
 <!-- ALT PANEL -->
@@ -310,6 +338,7 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
     <!-- 1. Ana -->
     <section id="v-home">
       <div class="hello" id="hello">Salam! <b>Hara gedirik?</b></div>
+      <button class="from" id="fromBtn"><span class="d"></span><span class="t"><small>Götürülmə nöqtəsi</small><b id="fromT">Yeriniz təyin olunur…</b></span><span class="ed">Dəyiş</span></button>
       <button class="where" id="whereBtn"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span>Hara gedirsiniz?</span><small>İndi ▾</small></button>
       <div class="quick" id="quick"></div>
       <div class="sec-h">Taksi xidmətləri</div>
@@ -412,11 +441,159 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
   <button class="mi" data-go="install"><span class="e">📲</span>Tətbiqi quraşdır</button>
   <button class="mi" data-go="support"><span class="e">💬</span>Dəstək</button>
   <button class="mi out" data-go="logout" id="miOut"><span class="e">🚪</span>Çıxış</button>
-  <div class="dfoot">BakuGo Taksi · v2.0 · <a class="lnk" href="privacy-policy.html" target="_blank">Gizlilik</a></div>
+  <div class="dfoot">BakuGo Taksi · v3.0 · <a class="lnk" href="privacy-policy.html" target="_blank">Gizlilik</a></div>
 </nav>
 
 <div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
+<script>
+/* BakuGo ehtiyat xəritəsi — Google Maps açarı işləməsə, eyni API ilə (Map, OverlayView, Polyline…) OpenStreetMap/CARTO plitələri üzərində işləyir.
+   Tətbiq kodu dəyişmədən işləsin deyə google.maps-in lazım olan hissəsini təqlid edir. */
+(function () {
+  const TS = 256, PI = Math.PI;
+  const X = (lng, z) => (lng + 180) / 360 * TS * 2 ** z;
+  const Y = (lat, z) => { const s = Math.sin(Math.max(-85, Math.min(85, lat)) * PI / 180); return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * PI)) * TS * 2 ** z; };
+  const LNG = (x, z) => x / (TS * 2 ** z) * 360 - 180;
+  const LAT = (y, z) => { const n = PI - 2 * PI * y / (TS * 2 ** z); return 180 / PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))); };
+  const isDark = (bg) => { const m = /^#?([0-9a-f]{6})$/i.exec(bg || ""); if (!m) return true; const v = parseInt(m[1], 16); return ((v >> 16) * 0.3 + ((v >> 8) & 255) * 0.59 + (v & 255) * 0.11) < 128; };
+
+  class LatLng { constructor(a, b) { if (typeof a === "object") { this._a = +(typeof a.lat === "function" ? a.lat() : a.lat); this._b = +(typeof a.lng === "function" ? a.lng() : a.lng); } else { this._a = +a; this._b = +b; } } lat() { return this._a; } lng() { return this._b; } toJSON() { return { lat: this._a, lng: this._b }; } }
+  const ll = (p) => (p instanceof LatLng ? p : new LatLng(p));
+
+  class LatLngBounds { constructor() { this.n = -90; this.s = 90; this.e = -180; this.w = 180; } extend(p) { p = ll(p); this.n = Math.max(this.n, p.lat()); this.s = Math.min(this.s, p.lat()); this.e = Math.max(this.e, p.lng()); this.w = Math.min(this.w, p.lng()); return this; } }
+
+  class Map {
+    constructor(el, o) {
+      this.el = el; el.innerHTML = ""; el.classList.add("mm");
+      this.c = { lat: o.center.lat, lng: o.center.lng }; this.z = o.zoom || 14; this.L = {}; this.ovs = new Set(); this.lines = new Set(); this.tiles = new globalThis.Map();
+      this.tl = this.d("mm-tiles"); this.sv = document.createElementNS("http://www.w3.org/2000/svg", "svg"); this.sv.setAttribute("class", "mm-svg"); el.appendChild(this.sv);
+      this.ov = this.d("mm-ov");
+      const at = this.d("mm-attr"); at.innerHTML = "© OpenStreetMap · © CARTO";
+      this.setOptions(o); this.gest(); this.draw();
+      new ResizeObserver(() => this.draw()).observe(el);
+    }
+    d(c) { const x = document.createElement("div"); x.className = c; this.el.appendChild(x); return x; }
+    get W() { return this.el.clientWidth || innerWidth; } get H() { return this.el.clientHeight || innerHeight; }
+    setOptions(o) { if (o.backgroundColor !== undefined) { this.dark = isDark(o.backgroundColor); this.el.classList.toggle("mm-day", !this.dark); this.tiles.forEach((t) => t.remove()); this.tiles.clear(); this.draw(); } }
+    addListener(n, f) { (this.L[n] = this.L[n] || []).push(f); return { remove: () => { this.L[n] = this.L[n].filter((x) => x !== f); } }; }
+    emit(n) { (this.L[n] || []).forEach((f) => { try { f(); } catch (e) { console.error(e); } }); }
+    getCenter() { return new LatLng(this.c.lat, this.c.lng); }
+    getZoom() { return this.z; }
+    setZoom(z) { this.z = Math.max(3, Math.min(19, Math.round(z))); this.draw(); this.idle(); }
+    setCenter(p) { p = ll(p); this.c = { lat: p.lat(), lng: p.lng() }; this.draw(); this.idle(); }
+    px(p) { p = ll(p); return { x: X(p.lng(), this.z) - X(this.c.lng, this.z) + this.W / 2, y: Y(p.lat(), this.z) - Y(this.c.lat, this.z) + this.H / 2 }; }
+    moveBy(dx, dy) { const cx = X(this.c.lng, this.z) + dx, cy = Y(this.c.lat, this.z) + dy; this.c = { lat: LAT(cy, this.z), lng: LNG(cx, this.z) }; }
+    anim(to, ms) {
+      cancelAnimationFrame(this.af); const f = { ...this.c }, t0 = performance.now();
+      const st = (now) => { const k = Math.min(1, (now - t0) / ms), e = 1 - (1 - k) ** 3; this.c = { lat: f.lat + (to.lat - f.lat) * e, lng: f.lng + (to.lng - f.lng) * e }; this.draw(); if (k < 1) this.af = requestAnimationFrame(st); else this.idle(); };
+      this.af = requestAnimationFrame(st);
+    }
+    panTo(p) { p = ll(p); this.anim({ lat: p.lat(), lng: p.lng() }, 380); }
+    panBy(dx, dy) { const z = this.z, cx = X(this.c.lng, z) + dx, cy = Y(this.c.lat, z) + dy; this.anim({ lat: LAT(cy, z), lng: LNG(cx, z) }, 260); }
+    fitBounds(b, pad) {
+      pad = typeof pad === "number" ? { top: pad, bottom: pad, left: pad, right: pad } : (pad || { top: 40, bottom: 40, left: 40, right: 40 });
+      const aw = Math.max(60, this.W - pad.left - pad.right), ah = Math.max(60, this.H - pad.top - pad.bottom);
+      let z = 18; while (z > 3 && (X(b.e, z) - X(b.w, z) > aw || Y(b.s, z) - Y(b.n, z) > ah)) z--;
+      this.z = z;
+      const mx = (X(b.e, z) + X(b.w, z)) / 2 + (pad.right - pad.left) / 2, my = (Y(b.s, z) + Y(b.n, z)) / 2 + (pad.bottom - pad.top) / 2;
+      this.c = { lat: LAT(my, z), lng: LNG(mx, z) }; this.draw(); this.idle();
+    }
+    idle() { clearTimeout(this.it); this.it = setTimeout(() => this.emit("idle"), 120); }
+    url(z, x, y) { const s = "abcd"[(x + y) % 4]; return this.dark ? `https://${s}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png` : `https://${s}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${x}/${y}@2x.png`; }
+    draw() {
+      if (this.raf) return;
+      this.raf = requestAnimationFrame(() => { this.raf = 0; this.render(); });
+    }
+    render() {
+      const z = this.z, W = this.W, H = this.H, cx = X(this.c.lng, z), cy = Y(this.c.lat, z), n = 2 ** z;
+      const x0 = Math.floor((cx - W / 2) / TS), x1 = Math.floor((cx + W / 2) / TS), y0 = Math.max(0, Math.floor((cy - H / 2) / TS)), y1 = Math.min(n - 1, Math.floor((cy + H / 2) / TS));
+      const keep = new Set();
+      for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+        const wx = ((x % n) + n) % n, k = z + "/" + x + "/" + y; keep.add(k);
+        let t = this.tiles.get(k);
+        if (!t) { t = new Image(); t.className = "mm-t"; t.draggable = false; t.decoding = "async"; t.onload = () => t.classList.add("on"); t.src = this.url(z, wx, y); this.tl.appendChild(t); this.tiles.set(k, t); }
+        t.style.transform = `translate(${Math.round(x * TS - cx + W / 2)}px,${Math.round(y * TS - cy + H / 2)}px)`;
+      }
+      this.tiles.forEach((t, k) => { if (!keep.has(k)) { if (+k.split("/")[0] !== z || this.tiles.size > 160) { t.remove(); this.tiles.delete(k); } else t.style.transform = "translate(-9999px,0)"; } });
+      this.sv.setAttribute("width", W); this.sv.setAttribute("height", H);
+      this.lines.forEach((l) => l.render()); this.ovs.forEach((o) => { try { o.draw(); } catch (e) {} });
+    }
+    zoomAt(nz, sx, sy) {
+      nz = Math.max(3, Math.min(19, nz)); if (nz === this.z) return;
+      const z = this.z, px = X(this.c.lng, z) + sx - this.W / 2, py = Y(this.c.lat, z) + sy - this.H / 2;
+      const at = { lat: LAT(py, z), lng: LNG(px, z) }; this.z = nz;
+      const ax = X(at.lng, nz), ay = Y(at.lat, nz); this.c = { lat: LAT(ay - sy + this.H / 2, nz), lng: LNG(ax - sx + this.W / 2, nz) };
+      this.tl.style.transform = ""; this.draw(); this.idle();
+    }
+    gest() {
+      const el = this.el, P = new globalThis.Map(); let last = null, pinch = null, moved = false, lastTap = 0;
+      el.style.touchAction = "none";
+      const pos = (e) => { const r = el.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+      el.addEventListener("pointerdown", (e) => {
+        if (e.target.closest && e.target.closest(".mk")) return;
+        el.setPointerCapture && el.setPointerCapture(e.pointerId); P.set(e.pointerId, pos(e)); cancelAnimationFrame(this.af);
+        if (P.size === 1) { last = pos(e); moved = false; }
+        if (P.size === 2) { const [a, b] = [...P.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), m: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, s: 1 }; }
+      });
+      el.addEventListener("pointermove", (e) => {
+        if (!P.has(e.pointerId)) return; const p = pos(e); P.set(e.pointerId, p);
+        if (P.size === 2 && pinch) { const [a, b] = [...P.values()]; pinch.s = Math.hypot(a.x - b.x, a.y - b.y) / pinch.d; this.tl.style.transformOrigin = pinch.m.x + "px " + pinch.m.y + "px"; this.tl.style.transform = `scale(${pinch.s})`; return; }
+        if (P.size === 1 && last) { const dx = p.x - last.x, dy = p.y - last.y; if (!moved && Math.hypot(dx, dy) < 3) return; if (!moved) { moved = true; this.emit("dragstart"); } this.moveBy(-dx, -dy); last = p; this.draw(); }
+      });
+      const up = (e) => {
+        if (!P.has(e.pointerId)) return; P.delete(e.pointerId);
+        if (pinch && P.size < 2) { const dz = Math.round(Math.log2(pinch.s)); const m = pinch.m; pinch = null; this.tl.style.transform = ""; if (dz) this.zoomAt(this.z + dz, m.x, m.y); last = null; return; }
+        if (P.size === 0) {
+          if (moved) { this.emit("dragend"); this.idle(); }
+          else { const now = Date.now(), p = pos(e); if (now - lastTap < 300) this.zoomAt(this.z + 1, p.x, p.y); lastTap = now; }
+          last = null;
+        }
+      };
+      el.addEventListener("pointerup", up); el.addEventListener("pointercancel", up);
+      el.addEventListener("wheel", (e) => { e.preventDefault(); clearTimeout(this.wt); this.wa = (this.wa || 0) + e.deltaY; this.wt = setTimeout(() => { const p = pos(e); this.zoomAt(this.z + (this.wa < 0 ? 1 : -1), p.x, p.y); this.wa = 0; }, 60); }, { passive: false });
+    }
+  }
+
+  class OverlayView {
+    setMap(m) {
+      if (this.map && this.map !== m) { this.map.ovs.delete(this); this.onRemove && this.onRemove(); this.map = null; }
+      if (m && !this.map) { this.map = m; m.ovs.add(this); this.onAdd && this.onAdd(); this.draw && this.draw(); }
+    }
+    getMap() { return this.map; }
+    getPanes() { const p = this.map.ov; return { overlayMouseTarget: p, overlayLayer: p, floatPane: p, markerLayer: p }; }
+    getProjection() { const m = this.map; return m ? { fromLatLngToDivPixel: (p) => m.px(p) } : null; }
+  }
+
+  class Polyline {
+    constructor(o) { this.o = { ...o }; this.p = document.createElementNS("http://www.w3.org/2000/svg", "path"); this.p.setAttribute("fill", "none"); this.p.setAttribute("stroke-linecap", "round"); this.p.setAttribute("stroke-linejoin", "round"); if (o.map) this.setMap(o.map); }
+    get(k) { return this.o[k]; }
+    set(k, v) { this.o[k] = v; this.render(); }
+    setMap(m) { if (this.m) { this.m.lines.delete(this); this.p.remove(); } this.m = m || null; if (m) { m.lines.add(this); const kids = [...m.sv.childNodes].filter((n) => +n.dataset.z > (this.o.zIndex || 0)); m.sv.insertBefore(this.p, kids[0] || null); this.p.dataset.z = this.o.zIndex || 0; this.render(); } }
+    render() {
+      const m = this.m; if (!m) return; const o = this.o;
+      this.p.setAttribute("d", (o.path || []).map((q, i) => { const s = m.px(q); return (i ? "L" : "M") + s.x.toFixed(1) + " " + s.y.toFixed(1); }).join(""));
+      const ic = o.icons && o.icons[0];
+      if (ic) {
+        const sc = (ic.icon && ic.icon.scale) || 2, rep = parseFloat(ic.repeat) || 18;
+        this.p.setAttribute("stroke", (ic.icon && ic.icon.strokeColor) || "#fff"); this.p.setAttribute("stroke-width", sc * 1.1); this.p.setAttribute("stroke-opacity", 0.95);
+        this.p.setAttribute("stroke-dasharray", `${sc * 2} ${rep - sc * 2}`); this.p.setAttribute("stroke-dashoffset", -parseFloat(ic.offset || 0));
+      } else {
+        this.p.setAttribute("stroke", o.strokeColor || "#12A9CC"); this.p.setAttribute("stroke-width", o.strokeWeight || 4); this.p.setAttribute("stroke-opacity", o.strokeOpacity == null ? 1 : o.strokeOpacity);
+      }
+    }
+  }
+
+  const fail = () => Promise.reject(new Error("ehtiyat xəritə"));
+  class Geocoder { geocode() { return fail(); } }
+  class DirectionsService { route() { return fail(); } }
+
+  window.BGMini = {
+    install() {
+      window.google = { maps: { Map, OverlayView, Polyline, LatLngBounds, LatLng, Geocoder, DirectionsService, event: { trigger() {} }, importLibrary: fail, __mini: true } };
+    }
+  };
+})();
+</script>
 <script type="module">
 /* =====================================================================
    BakuGo Taksi — müştəri tətbiqi
@@ -566,7 +743,26 @@ const STYLE_DAY = [
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#a9d8ea" }] }
 ];
 let map, geocoder, HtmlMk = null, meMk = null, routeLines = [], pins = [], dashTimer = null, radarMk = null, driverMk = null, mapsOK = false;
-window.gm_authFailure = () => mapFail("Google Maps açarı bu saytda işləmir (API açarının icazələrini yoxlayın).");
+/* Google Maps xətasının dəqiq səbəbini tuturuq (konsola yazdığı kod) */
+const _ce = console.error.bind(console);
+console.error = (...a) => { try { const m = /(\w+MapError)/.exec(a.map(String).join(" ")); if (m) S.gErr = m[1]; } catch (e) {} _ce(...a); };
+const G_WHY = {
+  RefererNotAllowedMapError: "Bu sayt açarın icazəli saytlar siyahısında yoxdur. Google Cloud → Credentials → açar → Website restrictions bölməsinə https://seymur048ibrahimov-wq.github.io/* əlavə edin.",
+  ApiNotActivatedMapError: "Google Cloud-da \"Maps JavaScript API\" aktiv deyil. APIs & Services → Library → Maps JavaScript API → Enable.",
+  ApiTargetBlockedMapError: "Açarın \"API restrictions\" siyahısında Maps JavaScript API seçilməyib.",
+  BillingNotEnabledMapError: "Google Cloud layihəsində Billing (ödəniş hesabı) aktiv deyil.",
+  InvalidKeyMapError: "Google Maps açarı səhvdir və ya silinib.",
+  ExpiredKeyMapError: "Google Maps açarının müddəti bitib.",
+  MissingKeyMapError: "Google Maps açarı göndərilmədi."
+};
+const FB_KEY = "bgtMapFb";
+function fbActive() { try { const v = JSON.parse(localStorage.getItem(FB_KEY) || "null"); return v && Date.now() - v.t < 20 * 60000 ? v : null; } catch (e) { return null; } }
+window.gm_authFailure = () => {
+  const why = G_WHY[S.gErr] || "Google Maps açarı bu saytda qəbul olunmadı.";
+  try { localStorage.setItem(FB_KEY, JSON.stringify({ t: Date.now(), code: S.gErr || "", why })); } catch (e) {}
+  if (!fbActive()) { useMini(why); return; }
+  location.reload();
+};
 function mapFail(msg) {
   mapsOK = false;
   const d = document.createElement("div"); d.className = "map-fail";
@@ -581,7 +777,7 @@ function loadMaps() {
     s.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&v=weekly&libraries=places,geometry&language=az&region=AZ&loading=async&callback=__gmcb`;
     s.async = true; s.onerror = () => rej(new Error("Google Maps skripti yüklənmədi"));
     document.head.appendChild(s);
-    setTimeout(() => rej(new Error("Google Maps cavab vermir")), 20000);
+    setTimeout(() => rej(new Error("Google Maps 12 saniyədə cavab vermədi")), 12000);
   });
 }
 function defOverlay() {
@@ -593,7 +789,16 @@ function defOverlay() {
     setPos(p) { this.pos = p; this.draw(); }
   };
 }
+function useMini(why) {
+  S.mapWhy = why; S.mini = true;
+  if (!window.BGMini) { mapFail(why); return; }
+  window.BGMini.install(); map = null; placesNew = false;
+  defOverlay(); buildMap(); placeMe(); if (S.route) drawRoute();
+  const n = $("mapNote"); n.classList.remove("hidden");
+}
 async function initMap() {
+  const fb = fbActive();
+  if (fb) { useMini(fb.why); return; }
   try {
     await loadMaps();
     /* loading=async rejimində siniflər importLibrary ilə gəlir — əks halda Map/OverlayView boş ola bilər və xəritə görünmür */
@@ -601,7 +806,7 @@ async function initMap() {
     if (!google.maps.Map || !google.maps.OverlayView) throw new Error("Google Maps kitabxanası tam yüklənmədi");
     defOverlay();
     buildMap();
-  } catch (e) { console.error(e); mapFail(e.message || String(e)); return; }
+  } catch (e) { console.warn(e); useMini((e && e.message) || "Google Maps yüklənmədi"); return; }
 }
 function buildMap() {
   map = new google.maps.Map($("map"), {
@@ -645,16 +850,22 @@ function startGeo() {
   navigator.geolocation.watchPosition((p) => {
     S.pos = { lat: p.coords.latitude, lng: p.coords.longitude }; S.posAcc = p.coords.accuracy || 0;
     placeMe();
+    /* İlk mövqe kobud ola bilər — daha dəqiq GPS gələndə götürülmə nöqtəsini yeniləyirik */
+    if (!firstFix && S.pick && S.pick.auto && S.view === "home" && S.posAcc + 20 < (S.pick.acc || 1e9) && hav(S.pick, S.pos) * 1000 > 25) {
+      S.pick = { ...S.pos, addr: S.pick.addr, auto: true, acc: S.posAcc };
+      reverse(S.pos).then((a) => { if (a && S.pick && S.pick.auto) { S.pick.addr = a; renderHome(); } });
+      if (map) panTo(S.pos);
+    }
     if (firstFix) {
       firstFix = false; checkRain();
-      if (!S.pick) { S.pick = { ...S.pos, addr: "Mənim yerim" }; reverse(S.pos).then((a) => { if (a && S.pick && S.pick.addr === "Mənim yerim") { S.pick.addr = a; renderHome(); } }); }
+      if (!S.pick) { S.pick = { ...S.pos, addr: "Mənim yerim", auto: true, acc: S.posAcc }; reverse(S.pos).then((a) => { if (a && S.pick && S.pick.auto) { S.pick.addr = a; renderHome(); } }); }
       if (S.view === "home" && map) panTo(S.pos, 16);
       renderHome(); loadNearby();
     }
-  }, () => { if (firstFix) { firstFix = false; noGeo(); } }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
+  }, (err) => { if (firstFix) { firstFix = false; noGeo(err); } }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
 }
-function noGeo() {
-  toast("Yeriniz təyin olunmadı — götürülmə nöqtəsini əl ilə seçin", 4000);
+function noGeo(err) {
+  toast(err && err.code === 1 ? "📍 Yer icazəsi verilməyib — brauzerdə bu sayt üçün \"Yer\" icazəsini açın və ya nöqtəni əl ilə seçin" : "Yeriniz təyin olunmadı — götürülmə nöqtəsini əl ilə seçin", 5000);
   S.pos = null; if (!S.pick) S.pick = null; checkRain(); renderHome();
 }
 
@@ -818,6 +1029,7 @@ function hideNearby(h) { for (const m of S.drivers.values()) m.el.style.display 
 /* ---------------- Görünüşlər ---------------- */
 const VIEWS = ["home", "opts", "find", "ride", "rate"];
 function show(v) {
+  sheetMode("open");
   if (v !== "opts") { cancelAnimationFrame(carRun); if (carMk) { carMk.setMap(null); carMk = null; } }
   S.view = v; VIEWS.forEach((x) => $("v-" + x).classList.toggle("hidden", x !== v));
   $("sb").scrollTop = 0; hideNearby(v === "ride"); placeLocate();
@@ -834,6 +1046,8 @@ function renderHome() {
   if (!pl.home) q.unshift({ e: "🏠", t: "Ev ünvanı", sub: "Əlavə edin", set: "home" });
   $("quick").innerHTML = q.map((x, i) => `<button class="qp" data-q="${i}"><span class="ic">${x.e}</span><span><b>${esc(x.t)}</b><small>${esc(x.sub || (x.p && x.p.addr) || "")}</small></span></button>`).join("");
   $("quick").querySelectorAll(".qp").forEach((b) => b.onclick = () => { const x = q[+b.dataset.q]; if (x.set) openSearch(x.set); else { S.drop = { ...x.p }; goOptions(); } });
+  $("fromT").textContent = S.pick ? S.pick.addr : (S.pos ? "Yeriniz təyin olunur…" : "Götürülmə nöqtəsini seçin");
+  $("fromBtn").classList.toggle("gps", !!(S.pick && S.pick.auto));
   renderSvc(); renderNear();
 }
 /* Ana ekranda kateqoriyalar: qiymət yalnız təyinat ünvanı tapılandan sonra görünür */
@@ -988,6 +1202,47 @@ $("pickNo").onclick = () => { const t = S.pickMode; endPick(); if (t !== "home" 
 $("whereBtn").onclick = () => openSearch("drop");
 $("backHome").onclick = () => { clearRoute(); S.route = null; show("home"); renderHome(); if (S.pos) panTo(S.pos, 15); };
 $("locBtn").onclick = () => { if (!S.pos) { toast("GPS icazəsini yoxlayın"); startGeo(); return; } panTo(S.pos, 16); };
+$("fromBtn").onclick = () => openSearch("pick");
+$("mapNote").onclick = () => modal("Xəritə haqqında", `<p style="color:var(--mut);font-size:14px;line-height:1.55;margin:0 0 6px">Google Maps hazırda bu səhifədə açılmadı, ona görə tətbiq <b style="color:var(--ink)">ehtiyat xəritə</b> ilə işləyir. Yer, ünvan axtarışı, marşrut və qiymət normal hesablanır.</p>
+  <div class="hc" style="margin:12px 0"><b style="font-size:13px">Səbəb:</b><div style="font-size:13.5px;margin-top:6px;line-height:1.5">${esc(S.mapWhy || "—")}</div>${S.gErr ? `<small style="color:var(--mut2)">Kod: ${esc(S.gErr)}</small>` : ""}</div>
+  <p style="color:var(--mut);font-size:12.5px;margin:0">Düzəltdikdən sonra aşağıdakı düyməni basın.</p>
+  <button class="cta" id="gRetry">Google Maps-i yenidən yoxla</button>`, () => { $("gRetry").onclick = () => { localStorage.removeItem(FB_KEY); location.reload(); }; });
+
+/* ---------------- Alt paneli barmaqla yuxarı / aşağı çəkmək ---------------- */
+function sheetMode(m) {
+  const sh = $("sheet"); sh.style.height = ""; sh.style.transition = "";
+  sh.classList.toggle("mini", m === "mini"); requestAnimationFrame(placeLocate);
+  if (S.route && S.view === "opts") setTimeout(() => fitTo(S.route.path), 360);
+}
+(function sheetDrag() {
+  const sh = $("sheet"), sb = $("sb"); let y0 = null, h0 = 0, fromC = false, drag = false, lastY = 0, vY = 0, lt = 0;
+  const MIN = 168;
+  sh.addEventListener("touchstart", (e) => {
+    if (innerWidth >= 760 || e.touches.length > 1) return;
+    const onGrab = !!e.target.closest(".grab");
+    fromC = !onGrab; if (fromC && sb.scrollTop > 0 && !sh.classList.contains("mini")) { y0 = null; return; }
+    y0 = lastY = e.touches[0].clientY; lt = Date.now(); vY = 0; h0 = sh.getBoundingClientRect().height; drag = false;
+  }, { passive: true });
+  sh.addEventListener("touchmove", (e) => {
+    if (y0 == null) return; const y = e.touches[0].clientY, dy = y - y0;
+    if (!drag) {
+      if (Math.abs(dy) < 6) return;
+      /* məzmundan yuxarı sürüşdürmə — siyahı scroll olsun, panel yox */
+      if (fromC && dy < 0 && !sh.classList.contains("mini")) { y0 = null; return; }
+      drag = true; sh.style.transition = "none"; sh.classList.remove("mini");
+    }
+    e.cancelable && e.preventDefault();
+    const now = Date.now(); vY = (y - lastY) / Math.max(1, now - lt); lastY = y; lt = now;
+    sh.style.height = Math.max(MIN, Math.min(innerHeight * 0.9, h0 - dy)) + "px"; placeLocate();
+  }, { passive: false });
+  const end = () => {
+    if (y0 == null) return; const was = drag; y0 = null; if (!was) return;
+    const h = sh.getBoundingClientRect().height, down = vY > 0.35 || (vY > -0.35 && h < h0 - 70);
+    sheetMode(down ? "mini" : "open");
+  };
+  sh.addEventListener("touchend", end); sh.addEventListener("touchcancel", end);
+  sh.querySelector(".grab").addEventListener("click", () => sheetMode(sh.classList.contains("mini") ? "open" : "mini"));
+})();
 $("shareBtn").onclick = () => shareLoc();
 async function shareLoc(extra) {
   const p = S.pos || (S.pick && S.pick);
