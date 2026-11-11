@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>BakuGo Taksi</title>
+<meta name="description" content="BakuGo Taksi — Bakıda premium taksi: bir toxunuşla sifariş, sabit qiymət, canlı izləmə.">
+<meta name="theme-color" content="#05100F">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BakuGo Taksi">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- Firebase: kod "npm install firebase" üslubunda yazılıb (import ... from "firebase/app").
+     Build olmadan da işləsin deyə bu importmap həmin adları rəsmi Firebase CDN-ə yönləndirir. -->
+<script type="importmap">
+{ "imports": {
+  "firebase/app": "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js",
+  "firebase/auth": "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js",
+  "firebase/firestore": "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js"
+} }
+</script>
+<style>
+:root{
+  --bg:#04100F; --bg2:#071918; --ink:#EAF6F3; --mut:#8FA9A5; --mut2:#5F7A76;
+  --em:#10C98F; --em2:#0A9C6E; --sea:#12A9CC; --sea2:#0B7194; --pink:#FF5FA2; --pink2:#E43F86;
+  --bordo:#8E1F3E; --red:#E5334B; --gold:#F3C969;
+  --glass:linear-gradient(160deg,rgba(22,44,44,.86),rgba(7,22,22,.92));
+  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+  --grad:linear-gradient(135deg,#10C98F 0%,#12A9CC 100%);
+  --grad-pink:linear-gradient(135deg,#FF5FA2 0%,#B23A78 100%);
+  --grad-bordo:linear-gradient(135deg,#B3264C 0%,#6E1430 100%);
+  --r:22px; --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+  --shadow:0 20px 50px -18px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.07);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;overscroll-behavior:none}
+button{font-family:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,textarea,select{font-family:inherit;color:var(--ink)}
+.hidden{display:none!important}
+.h{font-family:Sora,Manrope,sans-serif;letter-spacing:-.02em}
+
+/* ---------- Xəritə ---------- */
+#map{position:fixed;inset:0;background:#0a1516}
+#map::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 70% at 50% 110%,rgba(4,16,15,.92) 8%,transparent 55%),radial-gradient(90% 40% at 50% -10%,rgba(4,16,15,.75),transparent 60%)}
+.gm-style a[href^="https://maps.google.com"]{opacity:.5}
+.gm-style-cc{opacity:.45}
+.map-fail{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--mut);text-align:center;padding:30px;
+  background:radial-gradient(60% 50% at 50% 40%,rgba(16,201,143,.12),transparent),var(--bg)}
+
+/* Xəritə üstü HTML markerlər */
+.mk{position:absolute;transform:translate(-50%,-50%);pointer-events:none}
+.mk-me{width:20px;height:20px;border-radius:50%;background:#12A9CC;border:3px solid #fff;box-shadow:0 0 0 6px rgba(18,169,204,.25),0 4px 14px rgba(0,0,0,.5)}
+.mk-me::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid rgba(18,169,204,.5);animation:ping 2.2s infinite}
+.mk-pin{transform:translate(-50%,-100%)}
+.pin{width:38px;height:38px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px -6px rgba(0,0,0,.7)}
+.pin i{transform:rotate(45deg);font-style:normal;font-size:16px;font-weight:800;color:#04100F}
+.pin.a{background:var(--grad)} .pin.b{background:var(--grad-pink)} .pin.s{background:linear-gradient(135deg,#F3C969,#C98B2B)}
+.pin-lbl{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:700;padding:5px 10px;border-radius:10px;background:rgba(4,16,15,.9);border:1px solid var(--line2);box-shadow:0 8px 20px -8px #000}
+.mk-car{width:44px;height:44px;transition:transform .9s linear}
+.mk-car svg{width:100%;height:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+.radar{width:30px;height:30px}
+.radar span{position:absolute;inset:0;border-radius:50%;border:2px solid var(--em);animation:radar 2.4s infinite ease-out;opacity:0}
+.radar span:nth-child(2){animation-delay:.8s;border-color:var(--sea)} .radar span:nth-child(3){animation-delay:1.6s;border-color:var(--pink)}
+.radar b{position:absolute;inset:8px;border-radius:50%;background:var(--grad);box-shadow:0 0 20px rgba(16,201,143,.8)}
+@keyframes radar{0%{transform:scale(.6);opacity:.95}100%{transform:scale(9);opacity:0}}
+@keyframes ping{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.6);opacity:0}}
+.center-pin{position:fixed;left:50%;top:44%;transform:translate(-50%,-100%);z-index:6;pointer-events:none;transition:transform .2s}
+.center-pin.lift{transform:translate(-50%,-125%)}
+.center-pin .pin{width:46px;height:46px}
+.center-pin::after{content:"";position:absolute;left:50%;bottom:-6px;width:10px;height:4px;border-radius:50%;background:rgba(0,0,0,.6);transform:translateX(-50%)}
+
+/* ---------- Üst panel ---------- */
+.top{position:fixed;left:0;right:0;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:calc(12px + var(--safe-t)) 14px 0;pointer-events:none}
+.top>*{pointer-events:auto}
+.cbtn{width:46px;height:46px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:var(--glass);border:1px solid var(--line2);box-shadow:var(--shadow);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.cbtn svg{width:22px;height:22px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.brand{flex:1;display:flex;justify-content:center}
+.rate-chip{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;font-size:12.5px;font-weight:800;letter-spacing:.02em;background:var(--glass);border:1px solid var(--line2);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.rate-chip .dot{width:8px;height:8px;border-radius:50%;background:var(--em);box-shadow:0 0 10px var(--em)}
+.rate-chip.peak .dot{background:var(--pink);box-shadow:0 0 10px var(--pink)} .rate-chip.peak{border-color:rgba(255,95,162,.45)}
+.rate-chip.rain .dot{background:var(--sea);box-shadow:0 0 10px var(--sea)} .rate-chip.rain{border-color:rgba(18,169,204,.5)}
+.locate{position:fixed;right:14px;z-index:9;transition:bottom .35s cubic-bezier(.2,.8,.2,1)}
+
+/* ---------- Alt panel (sheet) ---------- */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;max-height:88vh;display:flex;flex-direction:column;
+  background:var(--glass);border-top:1px solid var(--line2);border-radius:28px 28px 0 0;box-shadow:0 -24px 60px -20px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08);
+  -webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);
+  transition:transform .4s cubic-bezier(.2,.8,.2,1);padding-bottom:calc(14px + var(--safe-b))}
+@media(min-width:760px){.sheet{left:20px;right:auto;width:420px;bottom:20px;border-radius:28px;border:1px solid var(--line2);max-height:calc(100vh - 110px)}}
+.grab{width:42px;height:5px;border-radius:5px;background:rgba(255,255,255,.18);margin:10px auto 4px;flex-shrink:0}
+.sb{overflow-y:auto;padding:8px 18px 4px;-webkit-overflow-scrolling:touch}
+.hello{font-size:13px;color:var(--mut);font-weight:600;margin:4px 2px 10px}
+.hello b{color:var(--ink)}
+.where{display:flex;align-items:center;gap:12px;width:100%;padding:16px 16px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid var(--line2);font-size:17px;font-weight:700;text-align:left}
+.where .ic{width:34px;height:34px;border-radius:11px;background:var(--grad-pink);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px -6px rgba(255,95,162,.6)}
+.where .ic svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.4}
+.where>span:not(.ic){flex:1;color:var(--ink)} .where .ic{flex:0 0 34px}
+.where small{font-size:12px;color:var(--mut);font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(255,255,255,.06)}
+.quick{display:flex;gap:10px;margin:12px 0 6px;overflow-x:auto;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.qp{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:10px 14px 10px 10px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line);max-width:220px;text-align:left}
+.qp .ic{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(16,201,143,.14);font-size:15px;flex-shrink:0}
+.qp b{display:block;font-size:13.5px} .qp small{display:block;font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.svc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 4px}
+.svc button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 10px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:11.5px;font-weight:700;color:var(--mut)}
+.svc button .e{font-size:22px} .svc button.on{border-color:rgba(16,201,143,.6);color:var(--ink);background:rgba(16,201,143,.10)}
+.banner{display:flex;gap:12px;align-items:center;margin:12px 0 8px;padding:14px;border-radius:18px;background:linear-gradient(135deg,rgba(255,95,162,.18),rgba(142,31,62,.22));border:1px solid rgba(255,95,162,.3)}
+.banner .e{font-size:26px} .banner b{display:block;font-size:14px} .banner small{color:#f3c1d8;font-size:12px}
+
+/* Axtarış paneli (tam ekran) */
+.search{position:fixed;inset:0;z-index:40;background:linear-gradient(180deg,#061513,#04100F);display:flex;flex-direction:column;padding-top:var(--safe-t);transform:translateY(100%);transition:transform .38s cubic-bezier(.2,.8,.2,1)}
+.search.on{transform:none}
+.s-head{display:flex;align-items:flex-start;gap:10px;padding:14px 14px 10px}
+.route-box{flex:1;position:relative;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid var(--line2);padding:4px 0}
+.route-box::before{content:"";position:absolute;left:21px;top:26px;bottom:26px;width:2px;background:linear-gradient(var(--em),var(--pink));opacity:.6}
+.rf{display:flex;align-items:center;gap:10px;padding:0 10px 0 14px}
+.rf .d{width:16px;height:16px;border-radius:50%;flex-shrink:0;border:3px solid var(--em);background:var(--bg)}
+.rf.b .d{border-color:var(--pink);border-radius:4px} .rf.s .d{border-color:var(--gold);width:14px;height:14px}
+.rf input{flex:1;min-width:0;height:46px;background:transparent;border:0;outline:0;font-size:15.5px;font-weight:600}
+.rf input::placeholder{color:var(--mut2)}
+.rf+.rf{border-top:1px solid var(--line)}
+.rf .x{width:30px;height:30px;border-radius:9px;color:var(--mut);font-size:18px}
+.s-tools{display:flex;gap:8px;padding:0 14px 10px;overflow-x:auto}
+.chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:13px;font-weight:700}
+.chip.em{color:var(--em);border-color:rgba(16,201,143,.35)} .chip.pk{color:var(--pink);border-color:rgba(255,95,162,.35)}
+.res{flex:1;overflow-y:auto;padding:0 8px calc(20px + var(--safe-b))}
+.ri{display:flex;align-items:center;gap:12px;width:100%;padding:12px 10px;border-radius:14px;text-align:left}
+.ri:active,.ri:hover{background:rgba(255,255,255,.05)}
+.ri .ic{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ri b{display:block;font-size:14.5px;font-weight:700} .ri small{display:block;font-size:12.5px;color:var(--mut);margin-top:2px}
+.ri .km{margin-left:auto;font-size:12px;color:var(--mut);white-space:nowrap}
+.sec-t{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut2);padding:14px 12px 6px}
+.empty{padding:30px 20px;text-align:center;color:var(--mut);font-size:14px}
+
+/* Seçim paneli: tariflər */
+.trip-sum{display:flex;align-items:center;gap:10px;margin:2px 0 12px;font-size:13px;color:var(--mut);font-weight:600}
+.trip-sum b{color:var(--ink)}
+.trip-sum .pill{margin-left:auto;padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:800}
+.pill.peak{background:rgba(255,95,162,.16);color:var(--pink)} .pill.rain{background:rgba(18,169,204,.16);color:#6fd6ef} .pill.std{background:rgba(16,201,143,.14);color:var(--em)}
+.cls{display:flex;flex-direction:column;gap:8px}
+.cl{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.035);border:1.5px solid transparent;text-align:left;transition:.2s}
+.cl.on{border-color:var(--em);background:linear-gradient(135deg,rgba(16,201,143,.14),rgba(18,169,204,.08));box-shadow:0 10px 30px -14px rgba(16,201,143,.6)}
+.cl .car{width:58px;height:34px;flex-shrink:0}
+.cl .t{flex:1;min-width:0} .cl b{font-size:15px;display:flex;align-items:center;gap:6px} .cl small{display:block;font-size:12px;color:var(--mut);margin-top:2px}
+.cl .p{text-align:right} .cl .p b{font-family:Sora,sans-serif;font-size:17px;justify-content:flex-end} .cl .p s{font-size:11.5px;color:var(--mut2)}
+.tag{font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(243,201,105,.16);color:var(--gold)}
+.opts{display:flex;gap:8px;margin:12px 0 4px;overflow-x:auto;scrollbar-width:none}
+.opts::-webkit-scrollbar{display:none}
+.opt{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:10px 13px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:13px;font-weight:700}
+.opt.on{border-color:rgba(255,95,162,.5);color:var(--pink);background:rgba(255,95,162,.08)}
+.cta{width:100%;height:58px;border-radius:18px;background:var(--grad);color:#03110E;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;
+  box-shadow:0 16px 36px -14px rgba(16,201,143,.85),inset 0 1px 0 rgba(255,255,255,.4);position:relative;overflow:hidden}
+.cta::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);transform:translateX(-100%);animation:shine 3.2s infinite}
+@keyframes shine{60%,100%{transform:translateX(100%)}}
+.cta:disabled{opacity:.5;filter:grayscale(.4)}
+.cta small{font-weight:700;opacity:.75}
+.ghost{width:100%;height:50px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line2);font-weight:800;font-size:15px;margin-top:10px}
+.danger{background:var(--grad-bordo);color:#fff;border:0;box-shadow:0 14px 30px -14px rgba(142,31,62,.9)}
+
+/* Axtarış / sürücü */
+.find{text-align:center;padding:6px 0 4px}
+.find h3{margin:6px 0 4px;font-size:20px} .find p{margin:0;color:var(--mut);font-size:13.5px}
+.bar{height:4px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:16px 0 4px}
+.bar i{display:block;height:100%;width:40%;background:var(--grad);border-radius:4px;animation:bar 1.6s infinite ease-in-out}
+@keyframes bar{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+.drv{display:flex;align-items:center;gap:14px;padding:4px 0 12px}
+.ava{width:62px;height:62px;border-radius:20px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#03110E;overflow:hidden;flex-shrink:0;position:relative}
+.ava img{width:100%;height:100%;object-fit:cover}
+.drv .t{flex:1;min-width:0} .drv b{font-size:17px;display:block} .drv small{color:var(--mut);font-size:13px}
+.star{color:var(--gold);font-weight:800}
+.plate{display:inline-flex;align-items:center;border-radius:8px;overflow:hidden;border:2px solid #111;background:#fff;color:#111;font-family:Sora,sans-serif;font-weight:800;font-size:15px;letter-spacing:.06em;box-shadow:0 6px 14px -6px #000}
+.plate i{font-style:normal;background:#1a4fd0;color:#fff;font-size:9px;padding:6px 4px;line-height:1;align-self:stretch;display:flex;align-items:flex-end}
+.plate span{padding:4px 9px}
+.status{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(16,201,143,.14),rgba(18,169,204,.10));border:1px solid rgba(16,201,143,.3);margin-bottom:12px}
+.status b{font-size:15px} .status small{display:block;color:var(--mut);font-size:12.5px}
+.status .eta{margin-left:auto;font-family:Sora,sans-serif;font-size:22px;font-weight:800;color:var(--em)}
+.status.arr{background:linear-gradient(135deg,rgba(255,95,162,.16),rgba(142,31,62,.18));border-color:rgba(255,95,162,.4)} .status.arr .eta{color:var(--pink)}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
+.act{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid var(--line);font-size:11.5px;font-weight:700}
+.act .e{font-size:20px} .act.sos{background:rgba(229,51,75,.12);border-color:rgba(229,51,75,.35);color:#ff8a9b}
+.rt{display:flex;justify-content:center;gap:8px;margin:14px 0}
+.rt button{font-size:38px;filter:grayscale(1) brightness(.6);transition:.15s} .rt button.on{filter:none;transform:scale(1.08)}
+.tips{display:flex;gap:8px;justify-content:center;margin:8px 0}
+.tips button{padding:10px 16px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--line2);font-weight:800}
+.tips button.on{background:var(--grad);color:#03110E;border-color:transparent}
+
+/* ---------- Menyu (çəkməcə) ---------- */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(2,8,8,.6);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:.3s}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;left:0;top:0;bottom:0;z-index:51;width:min(86vw,340px);background:linear-gradient(180deg,#0A1F1D,#04100F);border-right:1px solid var(--line2);transform:translateX(-102%);transition:transform .35s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;padding-top:var(--safe-t)}
+.drawer.on{transform:none}
+.me{display:flex;align-items:center;gap:14px;padding:22px 20px 18px;border-bottom:1px solid var(--line)}
+.me .ava{width:56px;height:56px;border-radius:18px;font-size:20px}
+.me b{display:block;font-size:17px} .me small{color:var(--mut);font-size:12.5px}
+.mi{display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;font-size:15px;font-weight:700;text-align:left}
+.mi .e{width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:17px}
+.mi:hover{background:rgba(255,255,255,.04)}
+.mi.out{color:#ff8a9b;margin-top:auto}
+.dfoot{padding:14px 20px calc(16px + var(--safe-b));font-size:11.5px;color:var(--mut2)}
+
+/* ---------- Modal ---------- */
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center;background:rgba(2,8,8,.65);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+@media(min-width:760px){.modal{align-items:center}}
+.mbox{width:100%;max-width:480px;max-height:90vh;overflow-y:auto;background:linear-gradient(170deg,#0C2422,#061513);border:1px solid var(--line2);border-radius:28px 28px 0 0;padding:20px 20px calc(20px + var(--safe-b));box-shadow:0 -30px 80px -20px #000}
+@media(min-width:760px){.mbox{border-radius:28px}}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mh h3{margin:0;font-size:19px}
+.mx{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);font-size:20px}
+.fl{display:block;margin:12px 0 0;font-size:12.5px;font-weight:700;color:var(--mut)}
+.inp{display:block;width:100%;height:52px;margin-top:6px;padding:0 16px;border-radius:15px;background:rgba(255,255,255,.05);border:1px solid var(--line2);font-size:15.5px;outline:0}
+.inp:focus{border-color:var(--em);box-shadow:0 0 0 4px rgba(16,201,143,.12)}
+textarea.inp{height:auto;padding:12px 16px;min-height:80px}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:54px;border-radius:16px;background:#fff;color:#111;font-weight:800;font-size:15.5px}
+.or{display:flex;align-items:center;gap:12px;color:var(--mut2);font-size:12px;margin:16px 0 4px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.err{color:#ff8a9b;font-size:13px;min-height:18px;margin-top:10px}
+.lnk{color:var(--em);font-weight:700;font-size:13.5px}
+.hist{display:flex;flex-direction:column;gap:10px}
+.hc{padding:14px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.hc .r1{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut)}
+.hc .r2{margin-top:8px;font-size:14px;font-weight:700;line-height:1.5}
+.hc .r2 i{font-style:normal;color:var(--em)} .hc .r2 em{font-style:normal;color:var(--pink)}
+.hc .r3{display:flex;justify-content:space-between;margin-top:8px;font-size:13px}
+.st-b{font-size:11px;font-weight:800;padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.07)}
+.st-b.ok{background:rgba(16,201,143,.15);color:var(--em)} .st-b.no{background:rgba(229,51,75,.15);color:#ff8a9b}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---------- Toast, splash ---------- */
+.toast{position:fixed;left:50%;top:calc(70px + var(--safe-t));transform:translate(-50%,-20px);z-index:80;max-width:min(92vw,420px);padding:12px 18px;border-radius:16px;background:rgba(6,22,21,.96);border:1px solid var(--line2);font-size:14px;font-weight:700;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.3s;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  background:radial-gradient(60% 40% at 30% 30%,rgba(16,201,143,.22),transparent),radial-gradient(50% 40% at 75% 70%,rgba(255,95,162,.18),transparent),radial-gradient(60% 50% at 80% 10%,rgba(18,169,204,.18),transparent),var(--bg);transition:opacity .5s}
+.splash img{width:112px;height:112px;border-radius:30px;box-shadow:0 30px 60px -20px rgba(16,201,143,.6)}
+.splash h1{margin:0;font-family:Sora,sans-serif;font-size:30px;letter-spacing:-.02em}
+.splash h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.splash p{margin:0;color:var(--mut);font-size:13px;letter-spacing:.3em;text-transform:uppercase}
+.splash.off{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="splash" id="splash"><img src="icon-192.png" alt=""><h1>Baku<span>Go</span> Taksi</h1><p>Premium səfər</p></div>
+
+<div id="map"></div>
+<div class="center-pin hidden" id="cpin"><div class="pin a"><i>A</i></div></div>
+
+<div class="top">
+  <button class="cbtn" id="menuBtn" aria-label="Menyu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+  <div class="brand"><div class="rate-chip" id="rateChip"><span class="dot"></span><span id="rateTxt">Tarif yüklənir…</span></div></div>
+  <button class="cbtn" id="shareBtn" aria-label="Yerimi paylaş"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg></button>
+</div>
+<button class="cbtn locate" id="locBtn" aria-label="Mənim yerim"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5"/></svg></button>
+
+<!-- ALT PANEL -->
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <div class="sb" id="sb">
+
+    <!-- 1. Ana -->
+    <section id="v-home">
+      <div class="hello" id="hello">Salam! <b>Hara gedirik?</b></div>
+      <button class="where" id="whereBtn"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span>Hara gedirsiniz?</span><small>İndi ▾</small></button>
+      <div class="quick" id="quick"></div>
+      <div class="svc" id="svcRow"></div>
+      <div class="banner" id="promoBanner"><span class="e">🎁</span><div><b>İlk səfərə xoş gəlmisiniz</b><small>Promo kodunuz varsa, sifariş edəndə yazın</small></div></div>
+    </section>
+
+    <!-- 2. Tarif seçimi -->
+    <section id="v-opts" class="hidden">
+      <div class="trip-sum" id="tripSum"></div>
+      <div class="cls" id="clsList"></div>
+      <div class="opts" id="optRow">
+        <button class="opt" id="oPay">💵 <span id="oPayT">Nağd</span></button>
+        <button class="opt" id="oWhen">🕒 <span id="oWhenT">İndi</span></button>
+        <button class="opt" id="oFor">👤 <span id="oForT">Özüm üçün</span></button>
+        <button class="opt" id="oPromo">🏷️ <span id="oPromoT">Promo kod</span></button>
+        <button class="opt" id="oNote">💬 <span id="oNoteT">Sürücüyə qeyd</span></button>
+      </div>
+      <button class="cta" id="orderBtn">Sifariş et <small id="orderPrice"></small></button>
+      <button class="ghost" id="backHome">Geri</button>
+    </section>
+
+    <!-- 3. Sürücü axtarılır -->
+    <section id="v-find" class="hidden">
+      <div class="find"><h3 class="h">Sürücü axtarılır…</h3><p id="findTxt">Ən yaxın sürücülərə sorğu göndərildi</p></div>
+      <div class="bar"><i></i></div>
+      <div class="trip-sum" id="findSum" style="margin-top:12px"></div>
+      <button class="ghost danger" id="cancelFind">Sifarişi ləğv et</button>
+    </section>
+
+    <!-- 4. Sürücü yolda / gəldi / səfər -->
+    <section id="v-ride" class="hidden">
+      <div class="status" id="rStatus"><div><b id="rStT">Sürücü yoldadır</b><small id="rStS">Sizə doğru gəlir</small></div><div class="eta" id="rEta">—</div></div>
+      <div class="drv">
+        <div class="ava" id="dAva">S</div>
+        <div class="t"><b id="dName">Sürücü</b><small><span class="star">★ <span id="dRate">5.0</span></span> · <span id="dCar">—</span></small></div>
+        <div class="plate"><i>AZ</i><span id="dPlate">—</span></div>
+      </div>
+      <div class="trip-sum" id="rideSum"></div>
+      <div class="acts">
+        <button class="act" id="aCall"><span class="e">📞</span>Zəng et</button>
+        <button class="act" id="aMsg"><span class="e">💬</span>Mesaj</button>
+        <button class="act" id="aShare"><span class="e">📍</span>Paylaş</button>
+        <button class="act sos" id="aSos"><span class="e">🆘</span>SOS</button>
+      </div>
+      <button class="ghost danger" id="cancelRide">Sifarişi ləğv et</button>
+    </section>
+
+    <!-- 5. Qiymətləndirmə -->
+    <section id="v-rate" class="hidden">
+      <div class="find"><h3 class="h">Səfər bitdi 🎉</h3><p id="rateSum">—</p></div>
+      <div class="rt" id="stars"></div>
+      <div class="tips" id="tips"></div>
+      <textarea class="inp" id="rateTxtIn" placeholder="Rəyiniz (istəyə bağlı)"></textarea>
+      <button class="cta" id="rateBtn">Göndər</button>
+      <button class="ghost" id="rateSkip">Keç</button>
+    </section>
+  </div>
+</div>
+
+<!-- AXTARIŞ -->
+<div class="search" id="search">
+  <div class="s-head">
+    <button class="cbtn" id="sBack" aria-label="Geri"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <div class="route-box" id="routeBox"></div>
+  </div>
+  <div class="s-tools">
+    <button class="chip em" id="sMap">📍 Xəritədə seç</button>
+    <button class="chip" id="sStop">＋ Dayanacaq</button>
+    <button class="chip pk" id="sHome">🏠 Ev</button>
+    <button class="chip pk" id="sWork">💼 İş</button>
+  </div>
+  <div class="res" id="res"></div>
+</div>
+
+<!-- Xəritədə seçim təsdiqi -->
+<div class="sheet hidden" id="pickSheet" style="z-index:30">
+  <div class="grab"></div>
+  <div class="sb">
+    <div class="hello" id="pickLbl">Nöqtəni seçin</div>
+    <div class="where" style="cursor:default"><span class="ic" style="background:var(--grad)"><svg viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span id="pickAddr">Ünvan təyin olunur…</span></div>
+    <button class="cta" id="pickOk">Təsdiq et</button>
+    <button class="ghost" id="pickNo">Ləğv et</button>
+  </div>
+</div>
+
+<!-- MENYU -->
+<div class="scrim" id="scrim"></div>
+<nav class="drawer" id="drawer">
+  <div class="me"><div class="ava" id="meAva">B</div><div><b id="meName">Qonaq</b><small id="meSub">Daxil olun</small></div></div>
+  <button class="mi" data-go="profile"><span class="e">👤</span>Profil</button>
+  <button class="mi" data-go="history"><span class="e">🧾</span>Səfərlərim</button>
+  <button class="mi" data-go="places"><span class="e">⭐</span>Ünvanlarım</button>
+  <button class="mi" data-go="pay"><span class="e">💳</span>Ödəniş üsulu</button>
+  <button class="mi" data-go="safety"><span class="e">🛡️</span>Təhlükəsizlik</button>
+  <button class="mi" data-go="mapstyle"><span class="e">🌗</span>Xəritə: <span id="msT">Gecə</span></button>
+  <button class="mi" data-go="install"><span class="e">📲</span>Tətbiqi quraşdır</button>
+  <button class="mi" data-go="support"><span class="e">💬</span>Dəstək</button>
+  <button class="mi out" data-go="logout" id="miOut"><span class="e">🚪</span>Çıxış</button>
+  <div class="dfoot">BakuGo Taksi · v1.0 · <a class="lnk" href="privacy-policy.html" target="_blank">Gizlilik</a></div>
+</nav>
+
+<div id="modalRoot"></div>
+<div class="toast" id="toast"></div>
+<script type="module">
+/* =====================================================================
+   BakuGo Taksi — müştəri tətbiqi
+   Firebase "npm install firebase" üslubunda import olunur (importmap → CDN).
+   ===================================================================== */
+import { initializeApp } from "firebase/app";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut } from "firebase/auth";
+import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, onSnapshot, query, where, getDocs, serverTimestamp, limit } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQIDfObXpxNa1hVAYDmigSi9u49y_BJQc",
+  authDomain: "bkaugo.firebaseapp.com",
+  projectId: "bkaugo",
+  storageBucket: "bkaugo.firebasestorage.app",
+  messagingSenderId: "568740538737",
+  appId: "1:568740538737:web:9b2ab40d0b728789a1aed0",
+  measurementId: "G-44T95W0PSX"
+};
+const GMAPS_KEY = "AIzaSyAQcVU7_ac2e73cMF__xd_t40Xu2kJchF4";
+/* Ayrı ad: eyni telefonda yemək, kuryer və taksi tətbiqləri bir-birinin girişini pozmasın */
+const fbApp = initializeApp(firebaseConfig, "bakugo-taksi");
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+/* ---------------- Tariflər (Firestore: settings/taxi ilə dəyişdirilə bilər) ---------------- */
+const DEF = {
+  perKm: 1.0,          // adi vaxt: 1 km = 1 AZN
+  peakRate: 1.4,       // pik saat: 1 km = 1.4 AZN
+  rainRate: 1.8,       // yağışlı hava: 1 km = 1.8 AZN
+  minKm: 1,            // ən az 1 km hesablanır
+  peakHours: [[7.5, 10], [17, 20]],   // 07:30–10:00 və 17:00–20:00
+  peakDays: [1, 2, 3, 4, 5, 6],        // B.e – Şənbə
+  rainMode: "auto",    // auto = hava proqnozuna görə; on / off = əl ilə
+  classes: [
+    { id: "eko", name: "Ekonom", mult: 1, seats: 4, desc: "Sərfəli və rahat", e: "🚕", color: "#10C98F" },
+    { id: "komfort", name: "Komfort", mult: 1.3, seats: 4, desc: "Yeni avtomobil, geniş salon", e: "🚘", color: "#12A9CC" },
+    { id: "biznes", name: "Biznes", mult: 1.8, seats: 4, desc: "Premium avtomobil, peşəkar sürücü", e: "🖤", color: "#F3C969", tag: "Premium" },
+    { id: "xl", name: "Minivan", mult: 1.5, seats: 6, desc: "6 nəfərə qədər, böyük baqaj", e: "🚐", color: "#FF5FA2" }
+  ],
+  whatsapp: "994702484852"
+};
+const BAKU = { lat: 40.4093, lng: 49.8671 };
+
+const S = {
+  settings: JSON.parse(JSON.stringify(DEF)), me: null, prof: {}, pos: null, posAcc: 0,
+  pick: null, drop: null, stops: [], cls: localStorage.getItem("bgtCls") || "eko",
+  pay: localStorage.getItem("bgtPay") || "cash", when: null, forWho: null, promo: null, note: "",
+  route: null, raining: false, ride: null, rideId: localStorage.getItem("bgtRide") || null, drivers: new Map(),
+  view: "home", mapDark: localStorage.getItem("bgtMap") !== "day"
+};
+
+/* ---------------- Köməkçilər ---------------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+const money = (n) => (Math.round(n * 100) / 100).toFixed(2);
+function toast(t, ms) { const x = $("toast"); x.textContent = t; x.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.remove("on"), ms || 2600); }
+function hav(a, b) { const R = 6371, r = (d) => d * Math.PI / 180; const dLa = r(b.lat - a.lat), dLo = r(b.lng - a.lng); const x = Math.sin(dLa / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
+const shortAddr = (a) => String(a || "").replace(/,?\s*(Azerbaijan|Azərbaycan|Азербайджан)\s*$/i, "").replace(/,?\s*AZ\s?\d{4}/i, "").replace(/^\w{4}\+\w{2,3},?\s*/, "").trim();
+const fmtMin = (m) => m < 60 ? Math.max(1, Math.round(m)) + " dəq" : Math.floor(m / 60) + " s " + Math.round(m % 60) + " dəq";
+function fbErr(e) {
+  const c = (e && e.code) || "";
+  if (c === "permission-denied") return "İcazə yoxdur (Firebase qaydaları). Dəstəyə yazın.";
+  if (c === "unavailable") return "İnternet bağlantısını yoxlayın";
+  return (e && (e.message || c)) || "Xəta baş verdi";
+}
+
+/* ---------------- Tarif məntiqi ---------------- */
+function isPeak(d) {
+  d = d || new Date(); const st = S.settings; const h = d.getHours() + d.getMinutes() / 60;
+  if (!(st.peakDays || []).includes(d.getDay())) return false;
+  return (st.peakHours || []).some(([a, b]) => h >= a && h < b);
+}
+function rateNow(at) {
+  const st = S.settings;
+  const rain = st.rainMode === "on" || (st.rainMode === "auto" && S.raining && !at);
+  if (rain) return { type: "rain", perKm: +st.rainRate, label: "🌧 Yağış tarifi · 1 km " + money(st.rainRate) + " ₼" };
+  if (isPeak(at)) return { type: "peak", perKm: +st.peakRate, label: "⚡ Pik saat · 1 km " + money(st.peakRate) + " ₼" };
+  return { type: "std", perKm: +st.perKm, label: "Standart · 1 km " + money(st.perKm) + " ₼" };
+}
+function priceFor(cls, km, at) {
+  const r = rateNow(at); const base = Math.max(km, S.settings.minKm || 0) * r.perKm * (cls.mult || 1);
+  const full = Math.round(base * 10) / 10;
+  let disc = 0;
+  if (S.promo) { disc = full * (S.promo.percent || 0) / 100; if (S.promo.maxAzn) disc = Math.min(disc, S.promo.maxAzn); disc = Math.round(disc * 10) / 10; }
+  return { full, price: Math.max(0, Math.round((full - disc) * 10) / 10), disc, rate: r };
+}
+function paintRate() {
+  const r = rateNow(); const c = $("rateChip");
+  c.className = "rate-chip " + (r.type === "std" ? "" : r.type);
+  $("rateTxt").textContent = r.label;
+}
+setInterval(paintRate, 60000);
+
+/* Hava: Open-Meteo (açarsız, pulsuz). Yağış varsa 1.8 tarif avtomatik qüvvəyə minir */
+async function checkRain() {
+  const p = S.pos || BAKU;
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lng}&current=precipitation,rain,showers,weather_code`);
+    const j = await r.json(); const c = j.current || {};
+    const code = +c.weather_code || 0;
+    S.raining = (+c.rain > 0) || (+c.showers > 0) || (+c.precipitation > 0.05) || (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
+  } catch (e) { /* hava alınmasa standart tarif */ }
+  paintRate(); if (S.view === "opts") renderOpts();
+}
+setInterval(checkRain, 10 * 60 * 1000);
+
+/* ---------------- Google Maps ---------------- */
+const STYLE_DARK = [
+  { elementType: "geometry", stylers: [{ color: "#0a1516" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#7f9a99" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#061011" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#1b2b2d" }] },
+  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.neighborhood", elementType: "labels.text.fill", stylers: [{ color: "#5d7c79" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#0e1c1d" }] },
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0b2a21" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#15262a" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0a1416" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#6f8f8c" }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#1a2f33" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#1c3d43" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#0d6266" }, { weight: 0.6 }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#a6d6cf" }] },
+  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "simplified" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#04253a" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#2e7698" }] }
+];
+const STYLE_DAY = [
+  { elementType: "geometry", stylers: [{ color: "#f3f1ea" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#5b6b68" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f7f5ef" }] },
+  { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#cfe9dc" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#bfe6dc" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#7cc9b6" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#a9d8ea" }] }
+];
+let map, geocoder, HtmlMk = null, meMk = null, routeLines = [], pins = [], dashTimer = null, radarMk = null, driverMk = null, mapsOK = false;
+window.gm_authFailure = () => mapFail("Google Maps açarı bu saytda işləmir (API açarının icazələrini yoxlayın).");
+function mapFail(msg) {
+  mapsOK = false;
+  const d = document.createElement("div"); d.className = "map-fail";
+  d.innerHTML = `<div style="font-size:42px">🗺️</div><b>Xəritə yüklənmədi</b><small>${esc(msg)}</small>`;
+  $("map").innerHTML = ""; $("map").appendChild(d);
+}
+function loadMaps() {
+  return new Promise((res, rej) => {
+    if (window.google && google.maps && google.maps.Map) return res();
+    window.__gmcb = () => res();
+    const s = document.createElement("script");
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&v=weekly&libraries=places,geometry&language=az&region=AZ&loading=async&callback=__gmcb`;
+    s.async = true; s.onerror = () => rej(new Error("Google Maps skripti yüklənmədi"));
+    document.head.appendChild(s);
+    setTimeout(() => rej(new Error("Google Maps cavab vermir")), 20000);
+  });
+}
+function defOverlay() {
+  HtmlMk = class extends google.maps.OverlayView {
+    constructor(pos, html, cls, z) { super(); this.pos = pos; this.el = document.createElement("div"); this.el.className = "mk " + (cls || ""); this.el.innerHTML = html; if (z) this.el.style.zIndex = z; }
+    onAdd() { this.getPanes().overlayMouseTarget.appendChild(this.el); }
+    draw() { const pr = this.getProjection(); if (!pr) return; const p = pr.fromLatLngToDivPixel(new google.maps.LatLng(this.pos.lat, this.pos.lng)); if (p) { this.el.style.left = p.x + "px"; this.el.style.top = p.y + "px"; } }
+    onRemove() { this.el.remove(); }
+    setPos(p) { this.pos = p; this.draw(); }
+  };
+}
+async function initMap() {
+  try { await loadMaps(); } catch (e) { mapFail(e.message); return; }
+  defOverlay();
+  map = new google.maps.Map($("map"), {
+    center: BAKU, zoom: 14, disableDefaultUI: true, clickableIcons: false, gestureHandling: "greedy",
+    styles: S.mapDark ? STYLE_DARK : STYLE_DAY, backgroundColor: S.mapDark ? "#0a1516" : "#f3f1ea", keyboardShortcuts: false
+  });
+  geocoder = new google.maps.Geocoder();
+  mapsOK = true;
+  map.addListener("dragstart", () => { if (S.pickMode) $("cpin").classList.add("lift"); });
+  map.addListener("idle", () => { if (S.pickMode) { $("cpin").classList.remove("lift"); pickReverse(); } });
+  if (S.pos) placeMe();
+  /* GPS xəritədən əvvəl gəlibsə, ünvanı indi dəqiqləşdir */
+  if (S.pick && S.pick.addr === "Mənim yerim") reverse(S.pick).then((a) => { if (a && S.pick && S.pick.addr === "Mənim yerim") S.pick.addr = a; });
+}
+function setMapStyle() { if (!map) return; map.setOptions({ styles: S.mapDark ? STYLE_DARK : STYLE_DAY, backgroundColor: S.mapDark ? "#0a1516" : "#f3f1ea" }); $("msT").textContent = S.mapDark ? "Gecə" : "Gündüz"; }
+function placeMe() {
+  if (!map || !HtmlMk || !S.pos) return;
+  if (!meMk) { meMk = new HtmlMk(S.pos, "", "mk-me", 5); meMk.setMap(map); } else meMk.setPos(S.pos);
+}
+function sheetH() { const sh = $("sheet"); return sh.classList.contains("hidden") ? 0 : sh.getBoundingClientRect().height; }
+function padBottom() { return Math.min(innerHeight * 0.75, sheetH() + 30); }
+function fitTo(points) {
+  if (!map || !points.length) return;
+  const b = new google.maps.LatLngBounds(); points.forEach((p) => b.extend(p));
+  const wide = innerWidth >= 760;
+  map.fitBounds(b, { top: 110, bottom: wide ? 60 : padBottom(), left: wide ? 470 : 40, right: 40 });
+}
+function panTo(p, z) {
+  if (!map) return; map.panTo(p); if (z) map.setZoom(z);
+  if (innerWidth < 760) setTimeout(() => map.panBy(0, Math.round(sheetH() / 2.6)), 250);
+}
+function placeLocate() { $("locBtn").style.bottom = (innerWidth >= 760 ? 24 : sheetH() + 14) + "px"; }
+new ResizeObserver(placeLocate).observe($("sheet"));
+addEventListener("resize", placeLocate);
+
+/* ---------------- Mövqe ---------------- */
+let firstFix = true;
+function startGeo() {
+  if (!navigator.geolocation) { noGeo(); return; }
+  navigator.geolocation.watchPosition((p) => {
+    S.pos = { lat: p.coords.latitude, lng: p.coords.longitude }; S.posAcc = p.coords.accuracy || 0;
+    placeMe();
+    if (firstFix) {
+      firstFix = false; checkRain();
+      if (!S.pick) { S.pick = { ...S.pos, addr: "Mənim yerim" }; reverse(S.pos).then((a) => { if (a && S.pick && S.pick.addr === "Mənim yerim") { S.pick.addr = a; renderHome(); } }); }
+      if (S.view === "home" && map) panTo(S.pos, 16);
+      renderHome(); loadNearby();
+    }
+  }, () => { if (firstFix) { firstFix = false; noGeo(); } }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
+}
+function noGeo() {
+  toast("Yeriniz təyin olunmadı — götürülmə nöqtəsini əl ilə seçin", 4000);
+  S.pos = null; if (!S.pick) S.pick = null; checkRain(); renderHome();
+}
+
+/* ---------------- Ünvan: geocode / axtarış ---------------- */
+async function reverse(p) {
+  try {
+    if (geocoder) {
+      const r = await geocoder.geocode({ location: p, language: "az" });
+      const best = (r.results || []).find((x) => !(x.types || []).includes("plus_code")) || (r.results || [])[0];
+      if (best) return shortAddr(best.formatted_address);
+    }
+  } catch (e) {}
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${p.lat}&lon=${p.lng}&zoom=18&accept-language=az`);
+    const j = await r.json(); const a = j.address || {};
+    return [a.road, a.house_number].filter(Boolean).join(" ") || (j.display_name || "").split(",").slice(0, 2).join(",") || "";
+  } catch (e) { return ""; }
+}
+let placesNew = true, sessTok = null, PL = null;
+async function suggest(q) {
+  const near = S.pos || BAKU, out = [];
+  if (placesNew && mapsOK) {
+    try {
+      if (!PL) PL = await google.maps.importLibrary("places");
+      if (!sessTok) sessTok = new PL.AutocompleteSessionToken();
+      const { suggestions } = await PL.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        input: q, sessionToken: sessTok, language: "az", includedRegionCodes: ["az"],
+        locationBias: { center: near, radius: 40000 }, origin: near
+      });
+      for (const s of suggestions || []) {
+        const p = s.placePrediction; if (!p) continue;
+        out.push({ main: p.mainText ? p.mainText.text : p.text.text, sub: p.secondaryText ? shortAddr(p.secondaryText.text) : "", dist: p.distanceMeters, pred: p });
+      }
+      if (out.length) return out;
+    } catch (e) { console.warn("Places (New) işləmədi, ehtiyat axtarışa keçilir:", e.message); placesNew = false; }
+  }
+  try {
+    const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&lat=${near.lat}&lon=${near.lng}&limit=8&bbox=44.7,38.3,50.8,41.95`);
+    const j = await r.json();
+    for (const f of j.features || []) {
+      const p = f.properties || {}, c = (f.geometry || {}).coordinates || [];
+      const main = p.name || [p.street, p.housenumber].filter(Boolean).join(" ");
+      if (!main || c.length < 2) continue;
+      const sub = [p.street && p.name ? [p.street, p.housenumber].filter(Boolean).join(" ") : "", p.district || p.locality, p.city].filter(Boolean).join(", ");
+      const loc = { lat: c[1], lng: c[0] };
+      out.push({ main, sub, dist: hav(near, loc) * 1000, loc });
+    }
+  } catch (e) {}
+  if (!out.length && geocoder) {
+    try {
+      const r = await geocoder.geocode({ address: q, componentRestrictions: { country: "AZ" }, language: "az" });
+      (r.results || []).slice(0, 6).forEach((x) => { const loc = x.geometry.location.toJSON(); out.push({ main: shortAddr(x.formatted_address).split(",")[0], sub: shortAddr(x.formatted_address), dist: hav(near, loc) * 1000, loc }); });
+    } catch (e) {}
+  }
+  return out;
+}
+async function resolveSug(s) {
+  if (s.loc) return { ...s.loc, addr: [s.main, s.sub].filter(Boolean).join(", ") };
+  const place = s.pred.toPlace();
+  await place.fetchFields({ fields: ["location", "formattedAddress", "displayName"] });
+  sessTok = null;
+  const loc = place.location.toJSON();
+  return { ...loc, addr: s.main + (s.sub ? ", " + s.sub : "") };
+}
+
+/* ---------------- Marşrut ---------------- */
+async function calcRoute() {
+  const pts = [S.pick, ...S.stops.filter(Boolean), S.drop];
+  let km = 0, min = 0, path = null;
+  if (mapsOK) {
+    try {
+      const ds = new google.maps.DirectionsService();
+      const req = { origin: pts[0], destination: pts[pts.length - 1], waypoints: pts.slice(1, -1).map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: true })), travelMode: "DRIVING", region: "az" };
+      let r; try { r = await ds.route({ ...req, drivingOptions: { departureTime: new Date(), trafficModel: "bestguess" } }); } catch (e) { r = await ds.route(req); }
+      const legs = r.routes[0].legs;
+      km = legs.reduce((a, l) => a + l.distance.value, 0) / 1000;
+      min = legs.reduce((a, l) => a + (l.duration_in_traffic || l.duration).value, 0) / 60;
+      path = r.routes[0].overview_path.map((p) => p.toJSON());
+    } catch (e) { console.warn("Google marşrut alınmadı:", e.message); }
+  }
+  if (!path) {
+    try {
+      const coords = pts.map((p) => p.lng + "," + p.lat).join(";");
+      const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
+      const j = await r.json(); const rt = (j.routes || [])[0];
+      if (rt) { km = rt.distance / 1000; min = rt.duration / 60 * 1.25; path = rt.geometry.coordinates.map((c) => ({ lat: c[1], lng: c[0] })); }
+    } catch (e) {}
+  }
+  if (!path) { for (let i = 1; i < pts.length; i++) km += hav(pts[i - 1], pts[i]) * 1.35; min = km / 24 * 60; path = pts.map((p) => ({ lat: p.lat, lng: p.lng })); }
+  S.route = { km: Math.round(km * 10) / 10, min: Math.round(min), path };
+  drawRoute();
+}
+function clearRoute() {
+  routeLines.forEach((l) => l.setMap(null)); routeLines = []; pins.forEach((m) => m.setMap(null)); pins = [];
+  clearInterval(dashTimer); dashTimer = null;
+}
+function pinHtml(cls, letter, label) { return `<div class="pin ${cls}"><i>${letter}</i></div>${label ? `<div class="pin-lbl">${esc(label)}</div>` : ""}`; }
+function drawRoute() {
+  if (!map || !S.route) return; clearRoute();
+  const path = S.route.path;
+  const glow = new google.maps.Polyline({ path, strokeColor: "#10C98F", strokeOpacity: 0.22, strokeWeight: 16, map, zIndex: 1 });
+  const core = new google.maps.Polyline({ path, strokeColor: S.mapDark ? "#12A9CC" : "#0B7194", strokeOpacity: 1, strokeWeight: 6, map, zIndex: 2 });
+  const dash = new google.maps.Polyline({ path, strokeOpacity: 0, map, zIndex: 3,
+    icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 1, strokeColor: "#E9FFF8", scale: 2.6 }, offset: "0", repeat: "18px" }] });
+  routeLines = [glow, core, dash];
+  let off = 0; dashTimer = setInterval(() => { off = (off + 1) % 180; const ic = dash.get("icons"); ic[0].offset = (off / 10) + "px"; dash.set("icons", ic); }, 50);
+  const a = new HtmlMk(S.pick, pinHtml("a", "A", fmtMin(S.route.min)), "mk-pin", 8); a.setMap(map); pins.push(a);
+  S.stops.filter(Boolean).forEach((p, i) => { const m = new HtmlMk(p, pinHtml("s", i + 1, ""), "mk-pin", 7); m.setMap(map); pins.push(m); });
+  const b = new HtmlMk(S.drop, pinHtml("b", "B", S.route.km + " km"), "mk-pin", 8); b.setMap(map); pins.push(b);
+  setTimeout(() => fitTo(path), 60);
+}
+
+/* ---------------- Yaxındakı sürücülər (canlı) ---------------- */
+const CAR_SVG = (c) => `<svg viewBox="0 0 64 64"><g transform="translate(32 32)"><rect x="-11" y="-22" width="22" height="44" rx="9" fill="${c}"/><rect x="-8.5" y="-14" width="17" height="10" rx="3" fill="#0a1a19" opacity=".85"/><rect x="-8.5" y="6" width="17" height="8" rx="3" fill="#0a1a19" opacity=".7"/><rect x="-9" y="-21" width="6" height="3" rx="1.5" fill="#fff8d6"/><rect x="3" y="-21" width="6" height="3" rx="1.5" fill="#fff8d6"/><rect x="-9" y="18.5" width="5" height="2.5" rx="1" fill="#ff4d6d"/><rect x="4" y="18.5" width="5" height="2.5" rx="1" fill="#ff4d6d"/></g></svg>`;
+let nearUnsub = null;
+function loadNearby() {
+  if (nearUnsub) return;
+  try {
+    nearUnsub = onSnapshot(query(collection(db, "taxiDrivers"), where("online", "==", true), limit(60)), (snap) => {
+      const seen = new Set();
+      snap.forEach((d) => {
+        const v = d.data(); if (typeof v.lat !== "number" || typeof v.lng !== "number" || v.busy === true) return;
+        const p = { lat: v.lat, lng: v.lng }; if (S.pos && hav(S.pos, p) > 8) return;
+        seen.add(d.id);
+        let m = S.drivers.get(d.id);
+        const cls = S.settings.classes.find((c) => c.id === v.cls) || S.settings.classes[0];
+        if (!m && HtmlMk && map) { m = new HtmlMk(p, `<div style="transform:rotate(${v.heading || 0}deg)">${CAR_SVG(cls.color)}</div>`, "mk-car", 4); m.setMap(map); S.drivers.set(d.id, m); }
+        else if (m) { m.setPos(p); const inner = m.el.firstChild; if (inner) inner.style.transform = `rotate(${v.heading || 0}deg)`; }
+      });
+      for (const [id, m] of S.drivers) if (!seen.has(id)) { m.setMap(null); S.drivers.delete(id); }
+      S.nearCount = seen.size; if (S.view === "opts") renderOpts();
+    }, () => {});
+  } catch (e) {}
+}
+function hideNearby(h) { for (const m of S.drivers.values()) m.el.style.display = h ? "none" : ""; }
+
+/* ---------------- Görünüşlər ---------------- */
+const VIEWS = ["home", "opts", "find", "ride", "rate"];
+function show(v) {
+  S.view = v; VIEWS.forEach((x) => $("v-" + x).classList.toggle("hidden", x !== v));
+  $("sb").scrollTop = 0; hideNearby(v === "ride"); placeLocate();
+}
+function recent() { try { return JSON.parse(localStorage.getItem("bgtRecent") || "[]"); } catch (e) { return []; } }
+function pushRecent(p) { if (!p || !p.addr) return; let r = recent().filter((x) => x.addr !== p.addr); r.unshift({ lat: p.lat, lng: p.lng, addr: p.addr }); localStorage.setItem("bgtRecent", JSON.stringify(r.slice(0, 8))); }
+function places() { const t = (S.prof && S.prof.taxi) || {}; return { home: t.home || null, work: t.work || null }; }
+function renderHome() {
+  const nm = (S.prof.name || (S.me && S.me.displayName) || "").split(" ")[0];
+  $("hello").innerHTML = (nm ? `Salam, <b>${esc(nm)}</b>! ` : "Salam! ") + `<b>Hara gedirik?</b>`;
+  const pl = places(), q = [];
+  if (pl.home) q.push({ e: "🏠", t: "Ev", p: pl.home }); if (pl.work) q.push({ e: "💼", t: "İş", p: pl.work });
+  recent().slice(0, 5).forEach((r) => q.push({ e: "🕘", t: r.addr.split(",")[0], p: r }));
+  if (!pl.home) q.unshift({ e: "🏠", t: "Ev ünvanı", sub: "Əlavə edin", set: "home" });
+  $("quick").innerHTML = q.map((x, i) => `<button class="qp" data-q="${i}"><span class="ic">${x.e}</span><span><b>${esc(x.t)}</b><small>${esc(x.sub || (x.p && x.p.addr) || "")}</small></span></button>`).join("");
+  $("quick").querySelectorAll(".qp").forEach((b) => b.onclick = () => { const x = q[+b.dataset.q]; if (x.set) openSearch(x.set); else { S.drop = { ...x.p }; goOptions(); } });
+  $("svcRow").innerHTML = S.settings.classes.map((c) => `<button data-c="${c.id}" class="${c.id === S.cls ? "on" : ""}"><span class="e">${c.e}</span>${esc(c.name)}</button>`).join("");
+  $("svcRow").querySelectorAll("button").forEach((b) => b.onclick = () => { S.cls = b.dataset.c; localStorage.setItem("bgtCls", S.cls); renderHome(); openSearch("drop"); });
+}
+async function goOptions() {
+  if (!S.pick) { toast("Əvvəlcə götürülmə nöqtəsini seçin"); openSearch("pick"); return; }
+  if (!S.drop) { openSearch("drop"); return; }
+  closeSearch(); show("opts"); $("tripSum").innerHTML = `<span>Marşrut hesablanır…</span>`; $("clsList").innerHTML = ""; $("orderBtn").disabled = true;
+  await calcRoute(); renderOpts();
+}
+function carMini(c) { return `<svg class="car" viewBox="0 0 116 68"><defs><linearGradient id="g${c.id}" x1="0" x2="1"><stop offset="0" stop-color="${c.color}"/><stop offset="1" stop-color="#0b2a2a"/></linearGradient></defs><path d="M10 46c0-8 4-12 12-14l14-12c4-3 8-4 13-4h22c6 0 10 2 14 6l10 10c8 1 14 5 14 14v6c0 2-2 4-4 4H14c-2 0-4-2-4-4z" fill="url(#g${c.id})"/><path d="M40 22h18v12H30zM62 22h12c4 0 7 2 9 5l5 7H62z" fill="#0a1a19" opacity=".75"/><circle cx="32" cy="56" r="9" fill="#0b1213" stroke="#3b4d4b" stroke-width="3"/><circle cx="86" cy="56" r="9" fill="#0b1213" stroke="#3b4d4b" stroke-width="3"/></svg>`; }
+function renderOpts() {
+  if (!S.route) return;
+  const r = rateNow(S.when ? new Date(S.when) : null);
+  const pill = `<span class="pill ${r.type}">${r.type === "rain" ? "🌧 Yağış" : r.type === "peak" ? "⚡ Pik saat" : "Standart"} · 1 km ${money(r.perKm)} ₼</span>`;
+  $("tripSum").innerHTML = `<span>🛣 <b>${S.route.km} km</b></span><span>⏱ <b>${fmtMin(S.route.min)}</b></span>${pill}`;
+  const near = S.nearCount || 0;
+  $("clsList").innerHTML = S.settings.classes.map((c) => {
+    const p = priceFor(c, S.route.km, S.when ? new Date(S.when) : null);
+    const eta = near ? Math.max(2, Math.round(3 + Math.random() * 4)) : null;
+    return `<button class="cl ${c.id === S.cls ? "on" : ""}" data-c="${c.id}">${carMini(c)}<span class="t"><b>${esc(c.name)} ${c.tag ? `<span class="tag">${esc(c.tag)}</span>` : ""}</b><small>${esc(c.desc)} · 👤${c.seats}${eta ? " · " + eta + " dəq" : ""}</small></span><span class="p"><b>${money(p.price)} ₼</b>${p.disc ? `<s>${money(p.full)} ₼</s>` : ""}</span></button>`;
+  }).join("");
+  $("clsList").querySelectorAll(".cl").forEach((b) => b.onclick = () => { S.cls = b.dataset.c; localStorage.setItem("bgtCls", S.cls); renderOpts(); });
+  const cls = S.settings.classes.find((c) => c.id === S.cls) || S.settings.classes[0];
+  const p = priceFor(cls, S.route.km, S.when ? new Date(S.when) : null);
+  $("orderPrice").textContent = "· " + money(p.price) + " ₼";
+  $("orderBtn").firstChild.textContent = S.when ? "Planlaşdır " : (cls.name + " sifariş et ");
+  $("orderBtn").disabled = false;
+  $("oPayT").textContent = S.pay === "card" ? "Kart (sürücüdə)" : "Nağd";
+  $("oWhenT").textContent = S.when ? new Date(S.when).toLocaleString("az-AZ", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "İndi";
+  $("oForT").textContent = S.forWho ? S.forWho.name || "Başqası üçün" : "Özüm üçün";
+  $("oPromoT").textContent = S.promo ? S.promo.code + " (−" + S.promo.percent + "%)" : "Promo kod";
+  $("oNoteT").textContent = S.note ? "Qeyd ✓" : "Sürücüyə qeyd";
+  ["oWhen", "oFor", "oPromo", "oNote"].forEach((id, i) => $(id).classList.toggle("on", !![S.when, S.forWho, S.promo, S.note][i]));
+}
+
+/* ---------------- Axtarış paneli ---------------- */
+let sTarget = "drop", sTimer = null, sItems = [];
+function openSearch(target) {
+  sTarget = target || "drop"; S.searchFor = sTarget;
+  renderRouteBox(); $("search").classList.add("on"); renderResults(null);
+  setTimeout(() => { const f = document.querySelector(`#routeBox input[data-t="${sTarget}"]`); if (f) { f.focus(); f.select(); } }, 350);
+}
+function closeSearch() { $("search").classList.remove("on"); document.activeElement && document.activeElement.blur && document.activeElement.blur(); }
+function renderRouteBox() {
+  const saveMode = sTarget === "home" || sTarget === "work";
+  let h = "";
+  if (saveMode) h = `<div class="rf b"><span class="d"></span><input data-t="${sTarget}" placeholder="${sTarget === "home" ? "Ev ünvanı" : "İş ünvanı"}" value=""></div>`;
+  else {
+    h += `<div class="rf a"><span class="d"></span><input data-t="pick" placeholder="Haradan?" value="${esc(S.pick ? S.pick.addr : "")}"></div>`;
+    S.stops.forEach((s, i) => { h += `<div class="rf s"><span class="d"></span><input data-t="stop${i}" placeholder="Dayanacaq ${i + 1}" value="${esc(s ? s.addr : "")}"><button class="x" data-rm="${i}">×</button></div>`; });
+    h += `<div class="rf b"><span class="d"></span><input data-t="drop" placeholder="Hara?" value="${esc(S.drop ? S.drop.addr : "")}"></div>`;
+  }
+  $("routeBox").innerHTML = h;
+  $("sStop").classList.toggle("hidden", saveMode || S.stops.length >= 2);
+  $("routeBox").querySelectorAll("input").forEach((inp) => {
+    inp.onfocus = () => { sTarget = inp.dataset.t; renderResults(inp.value && inp.value !== (cur(sTarget) || {}).addr ? inp.value : null); };
+    inp.oninput = () => { clearTimeout(sTimer); const v = inp.value.trim(); if (v.length < 2) { renderResults(null); return; } $("res").innerHTML = `<div class="empty">Axtarılır…</div>`; sTimer = setTimeout(async () => { const r = await suggest(v); if (inp.value.trim() === v) renderResults(v, r); }, 280); };
+  });
+  $("routeBox").querySelectorAll("[data-rm]").forEach((b) => b.onclick = () => { S.stops.splice(+b.dataset.rm, 1); renderRouteBox(); });
+}
+function cur(t) { if (t === "pick") return S.pick; if (t === "drop") return S.drop; if (t.startsWith("stop")) return S.stops[+t.slice(4)]; return places()[t]; }
+function assign(t, p) {
+  if (t === "pick") S.pick = p; else if (t === "drop") S.drop = p; else if (t.startsWith("stop")) S.stops[+t.slice(4)] = p;
+  else if (t === "home" || t === "work") { savePlace(t, p); return "saved"; }
+}
+function renderResults(q, list) {
+  const el = $("res");
+  if (!q) {
+    const pl = places(), it = [];
+    if (S.pos && sTarget !== "drop") it.push({ e: "🎯", main: "Mənim yerim", sub: "GPS mövqeyi", loc: S.pos });
+    if (pl.home) it.push({ e: "🏠", main: "Ev", sub: pl.home.addr, loc: pl.home });
+    if (pl.work) it.push({ e: "💼", main: "İş", sub: pl.work.addr, loc: pl.work });
+    recent().forEach((r) => it.push({ e: "🕘", main: r.addr.split(",")[0], sub: r.addr.split(",").slice(1).join(",").trim(), loc: r, full: r.addr }));
+    sItems = it;
+    el.innerHTML = it.length ? `<div class="sec-t">Son və saxlanmış</div>` + it.map((x, i) => `<button class="ri" data-i="${i}"><span class="ic">${x.e}</span><span><b>${esc(x.main)}</b><small>${esc(x.sub || "")}</small></span></button>`).join("") : `<div class="empty">Ünvan və ya məkan adını yazın.<br>Məs.: <b>28 Mall</b>, <b>Nizami küçəsi 10</b></div>`;
+  } else {
+    sItems = (list || []).map((x) => ({ ...x, e: "📍" }));
+    el.innerHTML = sItems.length ? sItems.map((x, i) => `<button class="ri" data-i="${i}"><span class="ic">📍</span><span><b>${esc(x.main)}</b><small>${esc(x.sub)}</small></span>${x.dist != null ? `<span class="km">${x.dist < 1000 ? Math.round(x.dist) + " m" : (x.dist / 1000).toFixed(1) + " km"}</span>` : ""}</button>`).join("") : `<div class="empty">Heç nə tapılmadı. Başqa cür yazın və ya <b>Xəritədə seç</b> düyməsini istifadə edin.</div>`;
+  }
+  el.querySelectorAll(".ri").forEach((b) => b.onclick = () => choose(sItems[+b.dataset.i]));
+}
+async function choose(x) {
+  let p;
+  try {
+    if (x.pred || (x.loc && !x.loc.addr && x.main !== "Mənim yerim")) p = await resolveSug(x);
+    else if (x.main === "Mənim yerim") p = { ...x.loc, addr: (S.pick && S.pick.lat === x.loc.lat ? S.pick.addr : (await reverse(x.loc)) || "Mənim yerim") };
+    else p = { lat: x.loc.lat, lng: x.loc.lng, addr: x.full || x.loc.addr || x.main };
+  } catch (e) { toast("Ünvan alınmadı, yenidən yoxlayın"); return; }
+  if (assign(sTarget, p) === "saved") { closeSearch(); return; }
+  if (sTarget !== "pick") pushRecent(p);
+  if (S.pick && S.drop && S.stops.every(Boolean)) goOptions();
+  else { const next = !S.pick ? "pick" : !S.drop ? "drop" : "stop" + S.stops.findIndex((s) => !s); sTarget = next; renderRouteBox(); renderResults(null); const f = document.querySelector(`#routeBox input[data-t="${next}"]`); f && f.focus(); }
+}
+$("sBack").onclick = () => { closeSearch(); if (S.view !== "opts") show("home"); };
+$("sStop").onclick = () => { if (S.stops.length >= 2) return; S.stops.push(null); sTarget = "stop" + (S.stops.length - 1); renderRouteBox(); const f = document.querySelector(`#routeBox input[data-t="${sTarget}"]`); f && f.focus(); };
+$("sHome").onclick = () => { const h = places().home; if (!h) { openSearch("home"); toast("Əvvəlcə ev ünvanını təyin edin"); return; } assign(sTarget === "pick" ? "pick" : "drop", { ...h }); if (S.pick && S.drop) goOptions(); else renderRouteBox(); };
+$("sWork").onclick = () => { const w = places().work; if (!w) { openSearch("work"); toast("Əvvəlcə iş ünvanını təyin edin"); return; } assign(sTarget === "pick" ? "pick" : "drop", { ...w }); if (S.pick && S.drop) goOptions(); else renderRouteBox(); };
+$("sMap").onclick = () => startPick(sTarget);
+
+/* Xəritədə nöqtə seçmək */
+let pickRT = 0;
+function startPick(t) {
+  if (!map) { toast("Xəritə hazır deyil"); return; }
+  S.pickMode = t; closeSearch();
+  $("sheet").classList.add("hidden"); $("pickSheet").classList.remove("hidden"); $("cpin").classList.remove("hidden");
+  const isA = t === "pick"; $("cpin").innerHTML = `<div class="pin ${isA ? "a" : t.startsWith("stop") ? "s" : "b"}"><i>${isA ? "A" : t.startsWith("stop") ? "•" : "B"}</i></div>`;
+  $("pickLbl").textContent = isA ? "Götürülmə nöqtəsini seçin" : t === "home" ? "Ev ünvanını seçin" : t === "work" ? "İş ünvanını seçin" : "Təyinat nöqtəsini seçin";
+  const c = cur(t) || S.pos || BAKU; map.panTo(c); map.setZoom(17); pickReverse();
+}
+async function pickReverse() {
+  const id = ++pickRT; $("pickAddr").textContent = "Ünvan təyin olunur…";
+  const c = map.getCenter().toJSON(); const a = await reverse(c);
+  if (id === pickRT) { const t = a || ("Nöqtə " + c.lat.toFixed(5) + ", " + c.lng.toFixed(5)); $("pickAddr").textContent = t; S.pickTmp = { ...c, addr: t }; }
+}
+function endPick() { S.pickMode = null; $("cpin").classList.add("hidden"); $("pickSheet").classList.add("hidden"); $("sheet").classList.remove("hidden"); }
+$("pickOk").onclick = () => { const t = S.pickMode, p = S.pickTmp; endPick(); if (!p) return; if (assign(t, p) === "saved") return; if (t !== "pick") pushRecent(p); if (S.pick && S.drop && S.stops.every(Boolean)) goOptions(); else openSearch(!S.drop ? "drop" : "pick"); };
+$("pickNo").onclick = () => { const t = S.pickMode; endPick(); if (t !== "home" && t !== "work") openSearch(t); };
+
+/* ---------------- Ana düymələr ---------------- */
+$("whereBtn").onclick = () => openSearch("drop");
+$("backHome").onclick = () => { clearRoute(); S.route = null; show("home"); if (S.pos) panTo(S.pos, 15); };
+$("locBtn").onclick = () => { if (!S.pos) { toast("GPS icazəsini yoxlayın"); startGeo(); return; } panTo(S.pos, 16); };
+$("shareBtn").onclick = () => shareLoc();
+async function shareLoc(extra) {
+  const p = S.pos || (S.pick && S.pick);
+  if (!p) { toast("Yeriniz hələ təyin olunmayıb"); return; }
+  const text = (extra || "Mənim yerim") + ": https://maps.google.com/?q=" + p.lat.toFixed(6) + "," + p.lng.toFixed(6);
+  try { if (navigator.share) await navigator.share({ title: "BakuGo Taksi", text }); else { await navigator.clipboard.writeText(text); toast("Link kopyalandı"); } } catch (e) {}
+}
+
+/* ---------------- Modal köməkçisi ---------------- */
+function modal(title, html, onMount) {
+  const root = $("modalRoot");
+  root.innerHTML = `<div class="modal" id="mdl"><div class="mbox"><div class="mh"><h3 class="h">${title}</h3><button class="mx" id="mx">×</button></div>${html}</div></div>`;
+  $("mx").onclick = closeModal; $("mdl").onclick = (e) => { if (e.target.id === "mdl") closeModal(); };
+  onMount && onMount();
+}
+function closeModal() { $("modalRoot").innerHTML = ""; }
+
+/* Seçimlər */
+$("oPay").onclick = () => modal("Ödəniş üsulu", `<div class="cls">
+  <button class="cl ${S.pay === "cash" ? "on" : ""}" data-p="cash"><span style="font-size:26px">💵</span><span class="t"><b>Nağd</b><small>Səfərin sonunda sürücüyə</small></span></button>
+  <button class="cl ${S.pay === "card" ? "on" : ""}" data-p="card"><span style="font-size:26px">💳</span><span class="t"><b>Kart (sürücüdə)</b><small>Sürücünün POS terminalı və ya köçürmə ilə</small></span></button></div>`,
+  () => document.querySelectorAll("[data-p]").forEach((b) => b.onclick = () => { S.pay = b.dataset.p; localStorage.setItem("bgtPay", S.pay); closeModal(); renderOpts(); }));
+$("oWhen").onclick = () => {
+  const min = new Date(Date.now() + 20 * 60000), v = S.when ? new Date(S.when) : min;
+  const loc = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  modal("Nə vaxt?", `<p style="color:var(--mut);font-size:13.5px;margin:0">Taksini indi və ya sonrakı vaxta (ən tez 20 dəqiqə sonra) sifariş edin. Qiymət seçdiyiniz vaxtın tarifi ilə hesablanır.</p>
+    <label class="fl">Tarix və saat<input class="inp" type="datetime-local" id="wIn" min="${loc(min)}" value="${loc(v)}"></label>
+    <button class="cta" id="wOk">Təsdiq et</button><button class="ghost" id="wNow">İndi</button>`,
+    () => { $("wOk").onclick = () => { const d = new Date($("wIn").value); if (isNaN(d) || d < Date.now() + 15 * 60000) { toast("Ən tez 20 dəqiqə sonrasını seçin"); return; } S.when = d.getTime(); closeModal(); renderOpts(); }; $("wNow").onclick = () => { S.when = null; closeModal(); renderOpts(); }; });
+};
+$("oFor").onclick = () => modal("Kim üçün?", `<p style="color:var(--mut);font-size:13.5px;margin:0">Taksini başqası üçün sifariş edə bilərsiniz — sürücü ona zəng edəcək.</p>
+  <label class="fl">Sərnişinin adı<input class="inp" id="fN" value="${esc(S.forWho ? S.forWho.name : "")}"></label>
+  <label class="fl">Telefon<input class="inp" id="fP" type="tel" placeholder="+994 50 000 00 00" value="${esc(S.forWho ? S.forWho.phone : "")}"></label>
+  <button class="cta" id="fOk">Təsdiq et</button><button class="ghost" id="fMe">Özüm üçün</button>`,
+  () => { $("fOk").onclick = () => { const n = $("fN").value.trim(), p = normPhone($("fP").value); if (!n || !p) { toast("Ad və düzgün telefon yazın"); return; } S.forWho = { name: n, phone: p }; closeModal(); renderOpts(); }; $("fMe").onclick = () => { S.forWho = null; closeModal(); renderOpts(); }; });
+$("oNote").onclick = () => modal("Sürücüyə qeyd", `<textarea class="inp" id="nIn" maxlength="200" placeholder="Məs.: Binanın arxa girişindəyəm, uşaq oturacağı lazımdır">${esc(S.note)}</textarea><button class="cta" id="nOk">Yadda saxla</button>`,
+  () => { $("nOk").onclick = () => { S.note = $("nIn").value.trim(); closeModal(); renderOpts(); }; });
+$("oPromo").onclick = () => modal("Promo kod", `<label class="fl">Kod<input class="inp" id="pIn" style="text-transform:uppercase" value="${esc(S.promo ? S.promo.code : "")}"></label><div class="err" id="pErr"></div><button class="cta" id="pOk">Tətbiq et</button>${S.promo ? `<button class="ghost" id="pRm">Promo kodu sil</button>` : ""}`,
+  () => {
+    $("pOk").onclick = async () => {
+      const code = $("pIn").value.trim().toUpperCase(); if (!code) return; $("pErr").textContent = "Yoxlanılır…";
+      try {
+        const d = await getDoc(doc(db, "taxiPromos", code)); const v = d.exists() ? d.data() : null;
+        if (!v || v.active === false) { $("pErr").textContent = "Belə promo kod yoxdur"; return; }
+        if (v.expiresAtMs && Date.now() > v.expiresAtMs) { $("pErr").textContent = "Bu kodun vaxtı bitib"; return; }
+        S.promo = { code, percent: +v.percent || 0, maxAzn: +v.maxAzn || 0 }; closeModal(); renderOpts(); toast("🎉 Promo kod tətbiq olundu");
+      } catch (e) { $("pErr").textContent = fbErr(e); }
+    };
+    if ($("pRm")) $("pRm").onclick = () => { S.promo = null; closeModal(); renderOpts(); };
+  });
+
+/* ---------------- Giriş və profil ---------------- */
+function normPhone(v) { let d = String(v || "").replace(/\D/g, ""); if (d.startsWith("994")) d = d.slice(3); if (d.startsWith("0")) d = d.slice(1); return d.length === 9 ? "+994" + d : ""; }
+let authWait = null;
+function needAuth() {
+  if (S.me) return Promise.resolve(true);
+  return new Promise((res) => { authWait = res; authModal("in"); });
+}
+function authModal(mode) {
+  const up = mode === "up";
+  modal(up ? "Qeydiyyat" : "Daxil ol", `
+    <button class="gbtn" id="gIn"><svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Google ilə davam et</button>
+    <div class="or">və ya e-poçt ilə</div>
+    ${up ? `<label class="fl">Ad, soyad<input class="inp" id="aN" autocomplete="name"></label>` : ""}
+    <label class="fl">E-poçt<input class="inp" id="aE" type="email" autocomplete="email"></label>
+    <label class="fl">Parol<input class="inp" id="aP" type="password" autocomplete="${up ? "new-password" : "current-password"}"></label>
+    <div class="err" id="aErr"></div>
+    <button class="cta" id="aGo">${up ? "Qeydiyyatdan keç" : "Daxil ol"}</button>
+    <div style="display:flex;justify-content:space-between;margin-top:14px"><button class="lnk" id="aSw">${up ? "Hesabım var — daxil ol" : "Yeni hesab yarat"}</button>${up ? "" : `<button class="lnk" id="aFg" style="color:var(--mut)">Parolu unutmusunuz?</button>`}</div>`,
+  () => {
+    const er = (t) => $("aErr").textContent = t;
+    const AE = { "auth/invalid-email": "E-poçt düzgün deyil", "auth/missing-password": "Parolu yazın", "auth/weak-password": "Parol ən azı 6 simvol olmalıdır", "auth/email-already-in-use": "Bu e-poçt artıq qeydiyyatdadır", "auth/invalid-credential": "E-poçt və ya parol səhvdir", "auth/too-many-requests": "Çox cəhd — bir az sonra yoxlayın", "auth/network-request-failed": "İnternet bağlantısını yoxlayın", "auth/popup-closed-by-user": "" };
+    $("gIn").onclick = async () => { const gp = new GoogleAuthProvider(); gp.setCustomParameters({ prompt: "select_account" }); try { await signInWithPopup(auth, gp); } catch (e) { if (["auth/popup-blocked", "auth/operation-not-supported-in-this-environment"].includes(e.code)) signInWithRedirect(auth, gp); else er(AE[e.code] ?? fbErr(e)); } };
+    $("aGo").onclick = async () => {
+      const e = $("aE").value.trim(), p = $("aP").value; if (!e || !p) { er("E-poçt və parolu yazın"); return; }
+      $("aGo").disabled = true; er("");
+      try { if (up) { const n = $("aN").value.trim(); if (!n) { er("Adınızı yazın"); $("aGo").disabled = false; return; } const c = await createUserWithEmailAndPassword(auth, e, p); await updateProfile(c.user, { displayName: n }); S.prof.name = n; } else await signInWithEmailAndPassword(auth, e, p); }
+      catch (x) { er(AE[x.code] ?? fbErr(x)); } $("aGo").disabled = false;
+    };
+    $("aSw").onclick = () => authModal(up ? "in" : "up");
+    if ($("aFg")) $("aFg").onclick = async () => { const e = $("aE").value.trim(); if (!e) { er("Əvvəlcə e-poçtu yazın"); return; } try { auth.languageCode = "az"; await sendPasswordResetEmail(auth, e); er(""); toast("Bərpa linki e-poçtunuza göndərildi"); } catch (x) { er(AE[x.code] ?? fbErr(x)); } };
+  });
+}
+function profileModal(cb) {
+  modal("Profil", `<label class="fl">Ad, soyad<input class="inp" id="prN" value="${esc(S.prof.name || (S.me && S.me.displayName) || "")}"></label>
+    <label class="fl">Telefon (sürücü sizə zəng edəcək)<input class="inp" id="prP" type="tel" placeholder="+994 50 000 00 00" value="${esc(S.prof.phone || "")}"></label>
+    <label class="fl">Etibarlı şəxsin telefonu (SOS üçün, istəyə bağlı)<input class="inp" id="prT" type="tel" placeholder="+994 …" value="${esc((S.prof.taxi && S.prof.taxi.trusted) || "")}"></label>
+    <div class="err" id="prE"></div><button class="cta" id="prOk">Yadda saxla</button>
+    <p style="color:var(--mut2);font-size:12px;margin-top:14px">${esc(S.me ? S.me.email || "" : "")} · <a class="lnk" href="delete-account.html" target="_blank">Hesabı sil</a></p>`,
+  () => {
+    $("prOk").onclick = async () => {
+      const n = $("prN").value.trim(), p = normPhone($("prP").value), t = $("prT").value.trim() ? normPhone($("prT").value) : "";
+      if (!n) { $("prE").textContent = "Adınızı yazın"; return; } if (!p) { $("prE").textContent = "Telefonu düzgün yazın: 050 000 00 00"; return; }
+      if ($("prT").value.trim() && !t) { $("prE").textContent = "Etibarlı şəxsin telefonu düzgün deyil"; return; }
+      try {
+        const taxi = { ...(S.prof.taxi || {}), trusted: t };
+        await setDoc(doc(db, "users", S.me.uid), { name: n, phone: p, taxi, email: S.me.email || "" }, { merge: true });
+        S.prof = { ...S.prof, name: n, phone: p, taxi }; paintMe(); renderHome(); closeModal(); toast("Yadda saxlanıldı"); cb && cb();
+      } catch (e) { $("prE").textContent = fbErr(e); }
+    };
+  });
+}
+async function savePlace(t, p) {
+  if (!(await needAuth())) return;
+  const taxi = { ...(S.prof.taxi || {}), [t]: { lat: p.lat, lng: p.lng, addr: p.addr } };
+  S.prof.taxi = taxi; renderHome();
+  try { await setDoc(doc(db, "users", S.me.uid), { taxi }, { merge: true }); toast(t === "home" ? "🏠 Ev ünvanı saxlanıldı" : "💼 İş ünvanı saxlanıldı"); } catch (e) { toast(fbErr(e)); }
+}
+function paintMe() {
+  const n = S.prof.name || (S.me && S.me.displayName) || "";
+  $("meName").textContent = S.me ? (n || "İstifadəçi") : "Qonaq";
+  $("meSub").textContent = S.me ? (S.prof.phone || S.me.email || "") : "Daxil olmaq üçün toxunun";
+  $("meAva").textContent = (n || "B").trim()[0].toUpperCase();
+  $("miOut").classList.toggle("hidden", !S.me);
+}
+onAuthStateChanged(auth, async (u) => {
+  S.me = u; S.prof = {};
+  if (u) {
+    try { const d = await getDoc(doc(db, "users", u.uid)); if (d.exists()) S.prof = d.data() || {}; } catch (e) {}
+    if (!S.prof.name && u.displayName) S.prof.name = u.displayName;
+    if (authWait) { closeModal(); const w = authWait; authWait = null; w(true); }
+    if (S.rideId) watchRide(S.rideId);
+  }
+  paintMe(); renderHome();
+});
+
+/* ---------------- Sifariş ---------------- */
+$("orderBtn").onclick = async () => {
+  if (!S.route) return;
+  if (!(await needAuth())) return;
+  if (!S.prof.phone) { toast("Sürücü sizə zəng edə bilsin deyə telefon nömrənizi yazın"); profileModal(() => $("orderBtn").click()); return; }
+  const cls = S.settings.classes.find((c) => c.id === S.cls) || S.settings.classes[0];
+  const at = S.when ? new Date(S.when) : null, p = priceFor(cls, S.route.km, at);
+  const ride = {
+    uid: S.me.uid, name: S.prof.name || S.me.displayName || "", phone: S.prof.phone, email: S.me.email || "",
+    forName: S.forWho ? S.forWho.name : "", forPhone: S.forWho ? S.forWho.phone : "",
+    pickup: { lat: S.pick.lat, lng: S.pick.lng, addr: S.pick.addr }, dropoff: { lat: S.drop.lat, lng: S.drop.lng, addr: S.drop.addr },
+    stops: S.stops.filter(Boolean).map((s) => ({ lat: s.lat, lng: s.lng, addr: s.addr })),
+    km: S.route.km, min: S.route.min, cls: cls.id, clsName: cls.name, mult: cls.mult,
+    rateType: p.rate.type, perKm: p.rate.perKm, priceFull: p.full, discount: p.disc, price: p.price, promo: S.promo ? S.promo.code : "",
+    pay: S.pay, note: S.note, scheduledAt: S.when || null, status: S.when ? "scheduled" : "searching",
+    createdAt: serverTimestamp(), createdAtMs: Date.now(), app: "taksi", platform: /android/i.test(navigator.userAgent) ? "android" : /iphone|ipad/i.test(navigator.userAgent) ? "ios" : "web"
+  };
+  $("orderBtn").disabled = true;
+  try {
+    const ref = await addDoc(collection(db, "taxiRides"), ride);
+    S.rideId = ref.id; localStorage.setItem("bgtRide", ref.id);
+    S.ride = { id: ref.id, ...ride, createdAt: null };
+    if (S.drop) pushRecent(S.drop);
+    renderRide(); watchRide(ref.id);
+  } catch (e) { toast(fbErr(e), 4000); }
+  $("orderBtn").disabled = false;
+};
+let rideUnsub = null, drvUnsub = null, findTimer = null, tick = null;
+function watchRide(id) {
+  if (rideUnsub) rideUnsub();
+  rideUnsub = onSnapshot(doc(db, "taxiRides", id), (d) => {
+    if (!d.exists()) { endRide(); return; }
+    const prev = S.ride && S.ride.status;
+    S.ride = { id: d.id, ...d.data() };
+    if (prev && prev !== S.ride.status) onStatus(prev, S.ride.status);
+    renderRide();
+  }, (e) => { console.warn(e); });
+}
+function onStatus(a, b) {
+  if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+  const msg = { accepted: "🚕 Sürücü tapıldı!", arrived: "📍 Sürücü sizi gözləyir", ongoing: "🛣 Səfər başladı. Xoş yol!", completed: "✅ Çatdınız", cancelled: S.ride && S.ride.cancelledBy === "driver" ? "Sürücü sifarişi ləğv etdi" : "Sifariş ləğv olundu", no_driver: "Yaxınlıqda boş sürücü tapılmadı" }[b];
+  if (msg) toast(msg, 3500);
+}
+function endRide() {
+  if (rideUnsub) { rideUnsub(); rideUnsub = null; } if (drvUnsub) { drvUnsub(); drvUnsub = null; }
+  clearInterval(findTimer); clearInterval(tick);
+  S.ride = null; S.rideId = null; localStorage.removeItem("bgtRide");
+  if (radarMk) { radarMk.setMap(null); radarMk = null; } if (driverMk) { driverMk.setMap(null); driverMk = null; }
+  clearRoute(); S.route = null; S.drop = null; S.stops = []; S.when = null; S.forWho = null; S.promo = null; S.note = "";
+  if (S.pos) S.pick = { ...S.pos, addr: S.pick && S.pick.lat === S.pos.lat ? S.pick.addr : "Mənim yerim" };
+  show("home"); renderHome(); if (S.pos) panTo(S.pos, 15);
+}
+function sumLine(r) { return `<span>🛣 <b>${r.km} km</b></span><span>💰 <b>${money(r.price)} ₼</b></span><span>${r.pay === "card" ? "💳 Kart" : "💵 Nağd"}</span>`; }
+function renderRide() {
+  const r = S.ride; if (!r) return;
+  const st = r.status;
+  if (st === "completed") { if (S.view !== "rate") rateView(); return; }
+  if (st === "cancelled") { endRide(); return; }
+  if (!S.route && r.pickup && r.dropoff) { S.pick = r.pickup; S.drop = r.dropoff; S.stops = r.stops || []; S.route = { km: r.km, min: r.min, path: [r.pickup, ...(r.stops || []), r.dropoff] }; calcRoute(); }
+  if (st === "searching" || st === "scheduled" || st === "no_driver") {
+    show("find");
+    $("findSum").innerHTML = sumLine(r);
+    if (st === "scheduled") { $("v-find").querySelector("h3").textContent = "Səfər planlaşdırıldı 🗓"; $("findTxt").textContent = new Date(r.scheduledAt).toLocaleString("az-AZ", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) + " — vaxtına yaxın sürücü təyin olunacaq"; $("v-find").querySelector(".bar").classList.add("hidden"); }
+    else if (st === "no_driver") { $("v-find").querySelector("h3").textContent = "Sürücü tapılmadı 😔"; $("findTxt").innerHTML = `Hazırda yaxınlıqda boş sürücü yoxdur. <button class="lnk" id="retry">Yenidən axtar</button>`; $("v-find").querySelector(".bar").classList.add("hidden"); $("retry").onclick = retryFind; }
+    else { $("v-find").querySelector("h3").textContent = "Sürücü axtarılır…"; $("v-find").querySelector(".bar").classList.remove("hidden"); startFindTimer(r); }
+    if (map && HtmlMk && !radarMk && st !== "scheduled") { radarMk = new HtmlMk(r.pickup, "<span></span><span></span><span></span><b></b>", "radar", 9); radarMk.setMap(map); panTo(r.pickup, 16); }
+    return;
+  }
+  if (radarMk) { radarMk.setMap(null); radarMk = null; } clearInterval(findTimer);
+  show("ride");
+  const dv = r.driver || {};
+  $("dName").textContent = dv.name || "Sürücü"; $("dRate").textContent = (+dv.rating || 5).toFixed(1);
+  $("dCar").textContent = [dv.color, dv.car].filter(Boolean).join(" ") || "—"; $("dPlate").textContent = dv.plate || "—";
+  $("dAva").innerHTML = dv.photo ? `<img src="${esc(dv.photo)}" alt="">` : esc((dv.name || "S")[0]);
+  $("rideSum").innerHTML = sumLine(r);
+  const stEl = $("rStatus"); stEl.classList.toggle("arr", st === "arrived");
+  $("cancelRide").classList.toggle("hidden", st === "ongoing");
+  if (st === "accepted") { $("rStT").textContent = "Sürücü yoldadır"; $("rStS").textContent = "Götürülmə nöqtəsinə gəlir"; }
+  if (st === "arrived") { $("rStT").textContent = "Sürücü sizi gözləyir"; $("rStS").textContent = "Pulsuz gözləmə: 3 dəqiqə"; }
+  if (st === "ongoing") { $("rStT").textContent = "Yoldayıq"; $("rStS").textContent = "Təyinat: " + (r.dropoff.addr || "").split(",")[0]; }
+  if (r.driverId && (!drvUnsub || S.drvId !== r.driverId)) watchDriver(r.driverId);
+  clearInterval(tick); tick = setInterval(updEta, 1000); updEta();
+}
+function updEta() {
+  const r = S.ride; if (!r) return;
+  if (r.status === "arrived") { const t = Math.max(0, Math.floor((Date.now() - (r.arrivedAtMs || Date.now())) / 1000)); $("rEta").textContent = Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); return; }
+  const dp = S.drvPos; if (!dp) { $("rEta").textContent = "—"; return; }
+  const target = r.status === "ongoing" ? r.dropoff : r.pickup;
+  const km = hav(dp, target) * 1.3; $("rEta").textContent = Math.max(1, Math.round(km / 25 * 60)) + " dəq";
+}
+function watchDriver(id) {
+  if (drvUnsub) drvUnsub(); S.drvId = id;
+  drvUnsub = onSnapshot(doc(db, "taxiDrivers", id), (d) => {
+    const v = d.data() || {}; if (typeof v.lat !== "number") return;
+    S.drvPos = { lat: v.lat, lng: v.lng };
+    const cls = S.settings.classes.find((c) => c.id === (S.ride && S.ride.cls)) || S.settings.classes[0];
+    if (map && HtmlMk) {
+      if (!driverMk) { driverMk = new HtmlMk(S.drvPos, `<div style="transform:rotate(${v.heading || 0}deg)">${CAR_SVG(cls.color)}</div>`, "mk-car", 10); driverMk.setMap(map); fitTo([S.drvPos, S.ride.status === "ongoing" ? S.ride.dropoff : S.ride.pickup]); }
+      else { driverMk.setPos(S.drvPos); const inner = driverMk.el.firstChild; if (inner) inner.style.transform = `rotate(${v.heading || 0}deg)`; }
+    }
+    updEta();
+  }, () => {});
+}
+function startFindTimer(r) {
+  clearInterval(findTimer);
+  const t0 = r.createdAtMs || Date.now();
+  findTimer = setInterval(() => {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    $("findTxt").textContent = s < 60 ? "Ən yaxın sürücülərə sorğu göndərildi" : `Axtarış davam edir · ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    if (s > 300 && S.ride && S.ride.status === "searching") { clearInterval(findTimer); updateDoc(doc(db, "taxiRides", S.ride.id), { status: "no_driver" }).catch(() => {}); }
+  }, 1000);
+}
+async function retryFind() { try { await updateDoc(doc(db, "taxiRides", S.ride.id), { status: "searching", createdAtMs: Date.now(), retries: (S.ride.retries || 0) + 1 }); } catch (e) { toast(fbErr(e)); } }
+function cancelFlow() {
+  const reasons = ["Planlarım dəyişdi", "Sürücü çox gecikir", "Səhv ünvan seçdim", "Başqa taksi tapdım", "Sürücü ləğv etməyimi istədi", "Digər"];
+  modal("Niyə ləğv edirsiniz?", `<div class="cls">${reasons.map((x, i) => `<button class="cl" data-r="${i}"><span class="t"><b style="font-size:14.5px">${x}</b></span></button>`).join("")}</div><button class="ghost" id="cKeep">Sifarişi saxla</button>`, () => {
+    $("cKeep").onclick = closeModal;
+    document.querySelectorAll("[data-r]").forEach((b) => b.onclick = async () => {
+      closeModal();
+      try { await updateDoc(doc(db, "taxiRides", S.ride.id), { status: "cancelled", cancelledBy: "customer", cancelReason: reasons[+b.dataset.r], cancelledAtMs: Date.now() }); }
+      catch (e) { toast(fbErr(e)); }
+    });
+  });
+}
+$("cancelFind").onclick = cancelFlow; $("cancelRide").onclick = cancelFlow;
+$("aCall").onclick = () => { const p = S.ride && S.ride.driver && S.ride.driver.phone; if (p) location.href = "tel:" + p; else toast("Sürücünün nömrəsi hələ yoxdur"); };
+$("aMsg").onclick = () => { const p = S.ride && S.ride.driver && S.ride.driver.phone; if (p) location.href = "sms:" + p; else toast("Sürücünün nömrəsi hələ yoxdur"); };
+$("aShare").onclick = () => { const d = (S.ride && S.ride.driver) || {}; shareLoc(`BakuGo Taksi ilə yoldayam — ${[d.color, d.car].filter(Boolean).join(" ")} ${d.plate || ""}, sürücü ${d.name || ""}. Yerim`); };
+$("aSos").onclick = () => modal("🆘 Təcili yardım", `<p style="color:var(--mut);font-size:13.5px;margin:0 0 12px">Təhlükədə olduğunuzu hiss edirsinizsə, dərhal 112-yə zəng edin.</p>
+  <a class="cta danger" href="tel:112" style="text-decoration:none">📞 112-yə zəng et</a>
+  ${S.prof.taxi && S.prof.taxi.trusted ? `<button class="ghost" id="sosT">Etibarlı şəxsə yerimi göndər</button>` : `<button class="ghost" id="sosSet">Etibarlı şəxs əlavə et</button>`}
+  <button class="ghost" id="sosSh">Yerimi paylaş</button>`, () => {
+  if ($("sosT")) $("sosT").onclick = () => { const p = S.pos || S.pick; const d = (S.ride && S.ride.driver) || {}; location.href = `sms:${S.prof.taxi.trusted}?body=${encodeURIComponent(`Təcili! BakuGo Taksi: ${d.car || ""} ${d.plate || ""}, sürücü ${d.name || ""}. Yerim: https://maps.google.com/?q=${p.lat},${p.lng}`)}`; };
+  if ($("sosSet")) $("sosSet").onclick = () => profileModal();
+  $("sosSh").onclick = () => shareLoc("Təcili — mənim yerim");
+});
+
+/* Qiymətləndirmə */
+let stars = 5, tip = 0;
+function rateView() {
+  show("rate"); stars = 5; tip = 0; const r = S.ride;
+  $("rateSum").innerHTML = `${esc((r.driver && r.driver.name) || "Sürücü")} · ${r.km} km · <b>${money(r.finalPrice || r.price)} ₼</b>`;
+  const ps = () => { $("stars").innerHTML = [1, 2, 3, 4, 5].map((i) => `<button data-s="${i}" class="${i <= stars ? "on" : ""}">⭐</button>`).join(""); $("stars").querySelectorAll("button").forEach((b) => b.onclick = () => { stars = +b.dataset.s; ps(); }); };
+  const pt = () => { $("tips").innerHTML = [0, 1, 2, 5].map((v) => `<button data-t="${v}" class="${v === tip ? "on" : ""}">${v ? "+" + v + " ₼" : "Bəxşişsiz"}</button>`).join(""); $("tips").querySelectorAll("button").forEach((b) => b.onclick = () => { tip = +b.dataset.t; pt(); }); };
+  ps(); pt(); $("rateTxtIn").value = "";
+}
+$("rateBtn").onclick = async () => { try { await updateDoc(doc(db, "taxiRides", S.ride.id), { rating: stars, tip, feedback: $("rateTxtIn").value.trim(), ratedAtMs: Date.now() }); toast("Təşəkkür edirik! 💚"); } catch (e) {} endRide(); };
+$("rateSkip").onclick = () => endRide();
+
+/* ---------------- Menyu ---------------- */
+function drawer(on) { $("drawer").classList.toggle("on", on); $("scrim").classList.toggle("on", on); }
+$("menuBtn").onclick = () => drawer(true); $("scrim").onclick = () => drawer(false);
+document.querySelector(".me").onclick = () => { drawer(false); if (!S.me) needAuth(); else profileModal(); };
+let deferredInstall = null;
+addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredInstall = e; });
+document.querySelectorAll(".mi").forEach((b) => b.onclick = async () => {
+  const g = b.dataset.go; drawer(false);
+  if (g === "profile") { if (await needAuth()) profileModal(); }
+  if (g === "history") { if (await needAuth()) historyModal(); }
+  if (g === "places") placesModal();
+  if (g === "pay") $("oPay").onclick();
+  if (g === "safety") $("aSos").onclick();
+  if (g === "mapstyle") { S.mapDark = !S.mapDark; localStorage.setItem("bgtMap", S.mapDark ? "dark" : "day"); setMapStyle(); drawRoute(); }
+  if (g === "install") { if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; } else if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) toast("✅ Tətbiq artıq quraşdırılıb"); else toast(/iphone|ipad/i.test(navigator.userAgent) ? "Safari: Paylaş ⬆️ → «Ana ekrana əlavə et»" : "Brauzer menyusu ⋮ → «Tətbiqi quraşdır»", 5000); }
+  if (g === "support") open(`https://wa.me/${S.settings.whatsapp}?text=${encodeURIComponent("Salam, BakuGo Taksi ilə bağlı sualım var")}`, "_blank");
+  if (g === "logout") { await signOut(auth); toast("Hesabdan çıxdınız"); }
+});
+function placesModal() {
+  const pl = places();
+  modal("Ünvanlarım", `<div class="cls">
+    <button class="cl" data-p="home"><span style="font-size:24px">🏠</span><span class="t"><b>Ev</b><small>${esc(pl.home ? pl.home.addr : "Təyin edilməyib")}</small></span><span class="lnk">${pl.home ? "Dəyiş" : "Əlavə et"}</span></button>
+    <button class="cl" data-p="work"><span style="font-size:24px">💼</span><span class="t"><b>İş</b><small>${esc(pl.work ? pl.work.addr : "Təyin edilməyib")}</small></span><span class="lnk">${pl.work ? "Dəyiş" : "Əlavə et"}</span></button></div>`,
+    () => document.querySelectorAll("[data-p]").forEach((b) => b.onclick = () => { closeModal(); openSearch(b.dataset.p); }));
+}
+async function historyModal() {
+  modal("Səfərlərim", `<div class="hist" id="hl"><div class="empty">Yüklənir…</div></div>`);
+  try {
+    const sn = await getDocs(query(collection(db, "taxiRides"), where("uid", "==", S.me.uid), limit(60)));
+    const L = sn.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAtMs || 0) - (a.createdAtMs || 0)).slice(0, 40);
+    const SL = { completed: ["Tamamlandı", "ok"], cancelled: ["Ləğv edildi", "no"], searching: ["Axtarılır", ""], scheduled: ["Planlaşdırılıb", ""], accepted: ["Sürücü yolda", ""], arrived: ["Sürücü gəldi", ""], ongoing: ["Yolda", ""], no_driver: ["Sürücü tapılmadı", "no"] };
+    $("hl").innerHTML = L.length ? L.map((r) => { const s = SL[r.status] || [r.status, ""]; return `<div class="hc"><div class="r1"><span>${new Date(r.createdAtMs || 0).toLocaleString("az-AZ", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })} · ${esc(r.clsName || "")}</span><span class="st-b ${s[1]}">${s[0]}</span></div>
+      <div class="r2"><i>●</i> ${esc((r.pickup && r.pickup.addr) || "")}<br><em>■</em> ${esc((r.dropoff && r.dropoff.addr) || "")}</div>
+      <div class="r3"><span style="color:var(--mut)">${r.km} km${r.driver && r.driver.name ? " · " + esc(r.driver.name) : ""}</span><b>${money(r.finalPrice || r.price || 0)} ₼</b></div></div>`; }).join("") : `<div class="empty">Hələ səfəriniz yoxdur.<br>İlk səfərinizi indi sifariş edin 🚕</div>`;
+  } catch (e) { $("hl").innerHTML = `<div class="empty">${esc(fbErr(e))}</div>`; }
+}
+
+/* ---------------- Parametrlər (admin dəyişə bilər) ---------------- */
+async function loadSettings() {
+  try {
+    const d = await getDoc(doc(db, "settings", "taxi"));
+    if (d.exists()) { const v = d.data(); S.settings = { ...S.settings, ...v, classes: Array.isArray(v.classes) && v.classes.length ? v.classes.map((c) => ({ ...(DEF.classes.find((x) => x.id === c.id) || {}), ...c })) : S.settings.classes }; }
+  } catch (e) { /* standart tariflərlə davam edir */ }
+  paintRate(); renderHome();
+}
+
+/* ---------------- Başlanğıc ---------------- */
+paintRate(); renderHome(); paintMe(); show("home");
+initMap().then(() => { if (S.pos) panTo(S.pos, 16); });
+startGeo(); loadSettings();
+if (S.rideId && !S.me) { /* giriş gələndə watchRide çağırılacaq */ }
+setTimeout(() => $("splash").classList.add("off"), 1100);
+setTimeout(() => $("splash").remove(), 1800);
+if ("serviceWorker" in navigator) addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+</script>
+</body>
+</html>
