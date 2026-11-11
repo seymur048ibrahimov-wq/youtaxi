@@ -363,6 +363,12 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 .bstick{display:block;width:3px;height:16px;background:#fff;border-radius:0 0 3px 3px;box-shadow:0 2px 4px rgba(0,0,0,.4)}
 .bshadow{position:absolute;left:50%;bottom:-4px;width:14px;height:6px;border-radius:50%;background:rgba(0,0,0,.55);transform:translateX(-50%);transition:.18s}
 .center-pin.lift .bshadow{bottom:-18px;width:10px;opacity:.6}
+
+.absum{display:block;width:100%;text-align:left;margin:0 0 10px;padding:9px 12px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--line);position:relative}
+.absum::after{content:"Dəyiş";position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;color:var(--em)}
+.ab{display:flex;align-items:center;gap:10px;padding:3px 52px 3px 0;font-size:13px;font-weight:600}
+.ab span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ab i{width:10px;height:10px;border-radius:50%;flex:0 0 10px;border:2.5px solid var(--em)} .ab i.b{border-color:var(--pink);border-radius:3px} .ab i.s{border-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -398,6 +404,7 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 
     <!-- 2. Tarif seçimi -->
     <section id="v-opts" class="hidden">
+      <button class="absum" id="abSum"></button>
       <div class="trip-sum" id="tripSum"></div>
       <div class="cls" id="clsList"></div>
       <div class="sec-h">Səfər əhvalı <small>sürücü görəcək</small></div>
@@ -889,18 +896,22 @@ async function routeGoogleNew(pts) {
   const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Goog-Api-Key": GMAPS_KEY, "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline" },
-    body: JSON.stringify({ origin: wp(pts[0]), destination: wp(pts[pts.length - 1]), intermediates: pts.slice(1, -1).map(wp), travelMode: "DRIVE", routingPreference: "TRAFFIC_AWARE", languageCode: "az", regionCode: "AZ", units: "METRIC" })
+    body: JSON.stringify({ origin: wp(pts[0]), destination: wp(pts[pts.length - 1]), intermediates: pts.slice(1, -1).map(wp), travelMode: "DRIVE", routingPreference: "TRAFFIC_AWARE",
+      computeAlternativeRoutes: pts.length === 2, languageCode: "az", regionCode: "AZ", units: "METRIC" })
   });
   const j = await r.json(); if (!r.ok) throw new Error((j.error && (j.error.status + ": " + j.error.message)) || "HTTP " + r.status);
-  const rt = (j.routes || [])[0]; if (!rt || !rt.distanceMeters) throw new Error("Routes API marşrut qaytarmadı");
+  /* Google ən SÜRƏTLİ yolu birinci verir (çox vaxt daha uzun). Bolt/Yango kimi — variantlardan ən QISA yolu götürürük */
+  const rt = (j.routes || []).filter((x) => x.distanceMeters).sort((a, b) => a.distanceMeters - b.distanceMeters)[0]; if (!rt) throw new Error("Routes API marşrut qaytarmadı");
   return { km: rt.distanceMeters / 1000, min: parseFloat(rt.duration || "0") / 60, path: decodePoly(rt.polyline.encodedPolyline), src: "Google" };
 }
 async function routeGoogleOld(pts) {
   const ds = new google.maps.DirectionsService();
   const req = { origin: pts[0], destination: pts[pts.length - 1], waypoints: pts.slice(1, -1).map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: true })), travelMode: "DRIVING", region: "az" };
+  req.provideRouteAlternatives = pts.length === 2;
   let r; try { r = await ds.route({ ...req, drivingOptions: { departureTime: new Date(), trafficModel: "bestguess" } }); } catch (e) { r = await ds.route(req); }
-  const legs = r.routes[0].legs;
-  return { km: legs.reduce((a, l) => a + l.distance.value, 0) / 1000, min: legs.reduce((a, l) => a + (l.duration_in_traffic || l.duration).value, 0) / 60, path: r.routes[0].overview_path.map((p) => p.toJSON()), src: "Google" };
+  const dist = (rt) => rt.legs.reduce((a, l) => a + l.distance.value, 0);
+  const best = r.routes.slice().sort((a, b) => dist(a) - dist(b))[0], legs = best.legs;
+  return { km: dist(best) / 1000, min: legs.reduce((a, l) => a + (l.duration_in_traffic || l.duration).value, 0) / 60, path: best.overview_path.map((p) => p.toJSON()), src: "Google" };
 }
 async function calcRoute() {
   const pts = [S.pick, ...S.stops.filter(Boolean), S.drop];
@@ -1050,6 +1061,7 @@ function renderOpts(fresh) {
   if (!S.route) return;
   const r = rateNow(S.when ? new Date(S.when) : null);
   const pill = r.type === "std" ? `<span class="pill lock" id="lockPill">🔒 Qiymət sabitdir</span>` : `<span class="pill ${r.type}">${r.type === "rain" ? "🌧 Yağış" : "⚡ Pik saat"} · 1 km ${money(r.perKm)} ₼</span>`;
+  $("abSum").innerHTML = `<div class="ab"><i class="a"></i><span>${esc(S.pick.addr)}</span></div>${S.stops.filter(Boolean).map((x) => `<div class="ab"><i class="s"></i><span>${esc(x.addr)}</span></div>`).join("")}<div class="ab"><i class="b"></i><span>${esc(S.drop.addr)}</span></div>`;
   $("tripSum").innerHTML = `<span>🛣 <b>${S.route.km} km</b> yolla</span><span>⏱ <b>${fmtMin(S.route.min)}</b></span>${pill}`;
   const near = S.nearCount || 0;
   $("clsList").innerHTML = S.settings.classes.map((c) => {
@@ -1201,6 +1213,7 @@ $("whereBtn").onclick = () => openSearch("drop");
 $("backHome").onclick = () => { clearRoute(); S.route = null; show("home"); renderHome(); const p = S.pick || S.pos; if (p) { S.pinLock = S.pick ? { lat: S.pick.lat, lng: S.pick.lng } : null; setTimeout(() => panTo(p, 16), 60); } };
 $("locBtn").onclick = () => { if (!S.pos) { toast("GPS icazəsini yoxlayın"); permFlow(true); return; } S.pickUser = false; S.pinLock = null; panTo(S.pos, 17); };
 $("fromBtn").onclick = () => openSearch("pick");
+$("abSum").onclick = () => openSearch("drop");
 $("mapNote").onclick = () => apiCheck();
 
 /* ---------------- Google API yoxlaması: açarınızla hər xidməti real sorğu ilə yoxlayır ---------------- */
