@@ -314,6 +314,10 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 .mm-ov{position:absolute;left:0;top:0;width:0;height:0}
 .mm-attr{position:absolute;right:6px;bottom:4px;font-size:9.5px;color:rgba(255,255,255,.45);pointer-events:none;z-index:1}
 .mm.mm-day .mm-attr{color:rgba(0,0,0,.45)}
+
+.mk-lbl{transform:translate(-50%,-130%)}
+.rlbl{display:flex;align-items:center;gap:7px;padding:6px 11px;border-radius:12px;white-space:nowrap;background:linear-gradient(135deg,#10C98F,#12A9CC);color:#03110E;font-size:12px;font-weight:800;box-shadow:0 10px 24px -8px rgba(0,0,0,.8)}
+.rlbl b{font-family:Sora,sans-serif;font-size:13px} .rlbl span{opacity:.75}
 </style>
 </head>
 <body>
@@ -932,31 +936,71 @@ async function resolveSug(s) {
 }
 
 /* ---------------- Marşrut ---------------- */
+/* Google encoded polyline → [{lat,lng}] */
+function decodePoly(str) {
+  let i = 0, lat = 0, lng = 0; const out = [];
+  while (i < str.length) {
+    for (const k of [0, 1]) {
+      let sh = 0, r = 0, c; do { c = str.charCodeAt(i++) - 63; r |= (c & 31) << sh; sh += 5; } while (c >= 32);
+      const d = (r & 1) ? ~(r >> 1) : (r >> 1); if (k) lng += d; else lat += d;
+    }
+    out.push({ lat: lat / 1e5, lng: lng / 1e5 });
+  }
+  return out;
+}
+/* Yol marşrutu — həmişə real yollarla (quş uçuşu YOX):
+   1) Google Routes API (sizin açar, tıxac nəzərə alınır)  2) Google Directions (köhnə)  3) OSRM  4) OSRM (Almaniya serveri) */
+async function routeGoogleNew(pts) {
+  const wp = (p) => ({ location: { latLng: { latitude: p.lat, longitude: p.lng } } });
+  const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-Goog-Api-Key": GMAPS_KEY, "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline" },
+    body: JSON.stringify({ origin: wp(pts[0]), destination: wp(pts[pts.length - 1]), intermediates: pts.slice(1, -1).map(wp), travelMode: "DRIVE", routingPreference: "TRAFFIC_AWARE", languageCode: "az", regionCode: "AZ", units: "METRIC" })
+  });
+  const j = await r.json(); if (!r.ok) throw new Error((j.error && (j.error.status + ": " + j.error.message)) || "HTTP " + r.status);
+  const rt = (j.routes || [])[0]; if (!rt || !rt.distanceMeters) throw new Error("Routes API marşrut qaytarmadı");
+  return { km: rt.distanceMeters / 1000, min: parseFloat(rt.duration || "0") / 60, path: decodePoly(rt.polyline.encodedPolyline), src: "Google" };
+}
+async function routeGoogleOld(pts) {
+  const ds = new google.maps.DirectionsService();
+  const req = { origin: pts[0], destination: pts[pts.length - 1], waypoints: pts.slice(1, -1).map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: true })), travelMode: "DRIVING", region: "az" };
+  let r; try { r = await ds.route({ ...req, drivingOptions: { departureTime: new Date(), trafficModel: "bestguess" } }); } catch (e) { r = await ds.route(req); }
+  const legs = r.routes[0].legs;
+  return { km: legs.reduce((a, l) => a + l.distance.value, 0) / 1000, min: legs.reduce((a, l) => a + (l.duration_in_traffic || l.duration).value, 0) / 60, path: r.routes[0].overview_path.map((p) => p.toJSON()), src: "Google" };
+}
+async function routeOsrm(pts, base) {
+  const coords = pts.map((p) => p.lng.toFixed(6) + "," + p.lat.toFixed(6)).join(";");
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 9000);
+  try {
+    const r = await fetch(`${base}/${coords}?overview=full&geometries=geojson`, { signal: ctl.signal });
+    const j = await r.json(); const rt = (j.routes || [])[0]; if (!rt) throw new Error(j.message || "OSRM marşrut tapmadı");
+    /* OSRM tıxacı bilmir — Bakı şəhər hərəkəti üçün vaxtı 1.3 dəfə artırırıq (məsafə dəyişmir) */
+    return { km: rt.distance / 1000, min: rt.duration / 60 * 1.3, path: rt.geometry.coordinates.map((c) => ({ lat: c[1], lng: c[0] })), src: "OSM" };
+  } finally { clearTimeout(t); }
+}
 async function calcRoute() {
   const pts = [S.pick, ...S.stops.filter(Boolean), S.drop];
-  let km = 0, min = 0, path = null;
-  if (mapsOK) {
-    try {
-      const ds = new google.maps.DirectionsService();
-      const req = { origin: pts[0], destination: pts[pts.length - 1], waypoints: pts.slice(1, -1).map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: true })), travelMode: "DRIVING", region: "az" };
-      let r; try { r = await ds.route({ ...req, drivingOptions: { departureTime: new Date(), trafficModel: "bestguess" } }); } catch (e) { r = await ds.route(req); }
-      const legs = r.routes[0].legs;
-      km = legs.reduce((a, l) => a + l.distance.value, 0) / 1000;
-      min = legs.reduce((a, l) => a + (l.duration_in_traffic || l.duration).value, 0) / 60;
-      path = r.routes[0].overview_path.map((p) => p.toJSON());
-    } catch (e) { console.warn("Google marşrut alınmadı:", e.message); }
+  const tries = [
+    ["Google Routes", () => routeGoogleNew(pts)],
+    ["Google Directions", () => (mapsOK && !S.mini && google.maps.DirectionsService ? routeGoogleOld(pts) : Promise.reject(new Error("yoxdur")))],
+    ["OSRM", () => routeOsrm(pts, "https://router.project-osrm.org/route/v1/driving")],
+    ["OSRM-DE", () => routeOsrm(pts, "https://routing.openstreetmap.de/routed-car/route/v1/driving")]
+  ];
+  let res = null; S.routeErr = [];
+  for (const [n, f] of tries) {
+    try { res = await f(); if (res && res.km > 0 && res.path && res.path.length > 1) break; res = null; }
+    catch (e) { S.routeErr.push(n + ": " + (e.message || e)); console.warn("Marşrut (" + n + ") alınmadı:", e.message || e); }
   }
-  if (!path) {
-    try {
-      const coords = pts.map((p) => p.lng + "," + p.lat).join(";");
-      const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
-      const j = await r.json(); const rt = (j.routes || [])[0];
-      if (rt) { km = rt.distance / 1000; min = rt.duration / 60 * 1.25; path = rt.geometry.coordinates.map((c) => ({ lat: c[1], lng: c[0] })); }
-    } catch (e) {}
-  }
-  if (!path) { for (let i = 1; i < pts.length; i++) km += hav(pts[i - 1], pts[i]) * 1.35; min = km / 24 * 60; path = pts.map((p) => ({ lat: p.lat, lng: p.lng })); }
-  S.route = { km: Math.round(km * 10) / 10, min: Math.round(min), path }; S.quoteKm = S.route.km;
-  drawRoute();
+  if (!res) { if (S.view === "opts") { S.route = null; routeFail(); } return false; }
+  S.route = { km: Math.round(res.km * 10) / 10, min: Math.max(1, Math.round(res.min)), path: res.path, src: res.src }; S.quoteKm = S.route.km;
+  drawRoute(); return true;
+}
+function routeFail() {
+  clearRoute();
+  $("tripSum").innerHTML = `<span style="color:#ff8a9b">⚠️ Yol marşrutu hesablanmadı. İnterneti yoxlayın.</span>`;
+  $("clsList").innerHTML = `<button class="cta" id="rRetry" style="margin-top:0">🔄 Yenidən hesabla</button>`;
+  $("rRetry").onclick = () => goOptions();
+  $("orderBtn").disabled = true; $("orderPrice").textContent = "";
 }
 function clearRoute() {
   cancelAnimationFrame(carRun); if (carMk) { carMk.setMap(null); carMk = null; }
@@ -973,9 +1017,13 @@ function drawRoute() {
     icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 1, strokeColor: "#E9FFF8", scale: 2.6 }, offset: "0", repeat: "18px" }] });
   routeLines = [glow, core, dash];
   let off = 0; dashTimer = setInterval(() => { off = (off + 1) % 180; const ic = dash.get("icons"); ic[0].offset = (off / 10) + "px"; dash.set("icons", ic); }, 50);
-  const a = new HtmlMk(S.pick, pinHtml("a", "A", fmtMin(S.route.min)), "mk-pin", 8); a.setMap(map); pins.push(a);
+  const short = (t) => { t = String(t || "").split(",")[0]; return t.length > 22 ? t.slice(0, 21) + "…" : t; };
+  const a = new HtmlMk(S.pick, pinHtml("a", "A", short(S.pick.addr)), "mk-pin", 8); a.setMap(map); pins.push(a);
+  /* marşrutun ortasında: real yol məsafəsi və vaxt */
+  const mid = path[Math.floor(path.length / 2)];
+  const lb = new HtmlMk(mid, `<div class="rlbl"><b>${S.route.km} km</b><span>${fmtMin(S.route.min)}</span></div>`, "mk-lbl", 9); lb.setMap(map); pins.push(lb);
   S.stops.filter(Boolean).forEach((p, i) => { const m = new HtmlMk(p, pinHtml("s", i + 1, ""), "mk-pin", 7); m.setMap(map); pins.push(m); });
-  const b = new HtmlMk(S.drop, pinHtml("b", "B", S.route.km + " km"), "mk-pin", 8); b.setMap(map); pins.push(b);
+  const b = new HtmlMk(S.drop, pinHtml("b", "B", short(S.drop.addr)), "mk-pin", 8); b.setMap(map); pins.push(b);
   setTimeout(() => fitTo(path), 60);
   if (S.view === "opts") runCar(path);
 }
@@ -1070,7 +1118,7 @@ async function goOptions() {
   closeSearch(); show("opts"); S.route = null; $("tripSum").innerHTML = `<span class="calc"><i></i>Ünvan dəqiqləşir, qiymət hesablanır…</span>`;
   $("clsList").innerHTML = S.settings.classes.map((c) => `<div class="cl sk">${carMini(c)}<span class="t"><b>${esc(c.name)}</b><small>${esc(c.desc)}</small></span><span class="p"><i class="shim"></i></span></div>`).join("");
   $("orderBtn").disabled = true; $("orderPrice").textContent = "";
-  await calcRoute(); S.lockUntil = Date.now() + 5 * 60000; renderOpts(true); renderSvc();
+  if (!(await calcRoute())) return; S.lockUntil = Date.now() + 5 * 60000; renderOpts(true); renderSvc();
 }
 let carSeq = 0;
 function carMini(c) { const gid = "g" + c.id + (++carSeq); return `<svg class="car" viewBox="0 0 116 68"><defs><linearGradient id="${gid}" x1="0" x2="1"><stop offset="0" stop-color="${c.color}"/><stop offset="1" stop-color="#0b2a2a"/></linearGradient></defs><path d="M10 46c0-8 4-12 12-14l14-12c4-3 8-4 13-4h22c6 0 10 2 14 6l10 10c8 1 14 5 14 14v6c0 2-2 4-4 4H14c-2 0-4-2-4-4z" fill="url(#${gid})"/><path d="M40 22h18v12H30zM62 22h12c4 0 7 2 9 5l5 7H62z" fill="#0a1a19" opacity=".75"/><circle cx="32" cy="56" r="9" fill="#0b1213" stroke="#3b4d4b" stroke-width="3"/><circle cx="86" cy="56" r="9" fill="#0b1213" stroke="#3b4d4b" stroke-width="3"/></svg>`; }
