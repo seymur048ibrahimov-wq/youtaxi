@@ -48,8 +48,8 @@ input,textarea,select{font-family:inherit;color:var(--ink)}
 
 /* ---------- Xəritə ---------- */
 #map{position:fixed;inset:0;background:#0a1516}
-#map::after{content:"";position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(120% 70% at 50% 110%,rgba(4,16,15,.92) 8%,transparent 55%),radial-gradient(90% 40% at 50% -10%,rgba(4,16,15,.75),transparent 60%)}
+#map::after{content:"";position:absolute;left:0;right:0;top:0;height:130px;pointer-events:none;z-index:1;
+  background:linear-gradient(180deg,rgba(4,16,15,.55),transparent)}
 .gm-style a[href^="https://maps.google.com"]{opacity:.5}
 .gm-style-cc{opacity:.45}
 .map-fail{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--mut);text-align:center;padding:30px;
@@ -244,6 +244,49 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 .splash h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
 .splash p{margin:0;color:var(--mut);font-size:13px;letter-spacing:.3em;text-transform:uppercase}
 .splash.off{opacity:0;pointer-events:none}
+
+/* ===== v2: premium yeniləmə ===== */
+.wm{display:inline-flex;align-items:center;gap:8px;padding:7px 14px 7px 7px;border-radius:999px;background:var(--glass);border:1px solid var(--line2);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);font-family:Sora,sans-serif;font-weight:800;font-size:15px;letter-spacing:-.01em}
+.wm img{width:30px;height:30px;border-radius:10px}
+.wm b{background:linear-gradient(90deg,#10C98F,#12A9CC 55%,#FF5FA2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand .rate-chip:not(.hidden)~*{display:none}
+.brand:has(.rate-chip:not(.hidden)) .wm{display:none}
+.sheet::before{content:"";position:absolute;left:24px;right:24px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(16,201,143,.9),rgba(18,169,204,.9),rgba(255,95,162,.9),transparent);opacity:.8}
+.sheet{background:linear-gradient(165deg,rgba(14,38,37,.9),rgba(5,17,17,.95))}
+.where{background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.03));box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 14px 30px -18px #000}
+.sec-h{display:flex;align-items:baseline;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mut2);margin:16px 2px 8px}
+.sec-h small{letter-spacing:0;text-transform:none;font-weight:600;font-size:11px;color:var(--mut2);opacity:.8}
+.svc{margin:0 0 4px}
+.svc button{position:relative;gap:3px;padding:10px 4px 10px;border-radius:18px;background:linear-gradient(170deg,rgba(255,255,255,.06),rgba(255,255,255,.015));transition:.2s}
+.svc button .car{width:52px;height:30px;margin-bottom:2px}
+.svc button b{font-size:12px;color:var(--ink)}
+.svc .pr{font-family:Sora,sans-serif;font-size:12.5px;font-weight:800;color:var(--em)}
+.svc .pr.wait{font-family:Manrope,sans-serif;font-size:10px;font-weight:700;color:var(--mut2)}
+.svc button.on{background:linear-gradient(160deg,rgba(16,201,143,.20),rgba(18,169,204,.08));border-color:rgba(16,201,143,.65);box-shadow:0 12px 26px -14px rgba(16,201,143,.8)}
+.near{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;margin:12px 0 4px;padding:12px 14px;border-radius:18px;background:linear-gradient(135deg,rgba(18,169,204,.14),rgba(16,201,143,.06));border:1px solid rgba(18,169,204,.28)}
+.near .pulse{grid-row:span 2;width:12px;height:12px;border-radius:50%;background:var(--em);box-shadow:0 0 0 0 rgba(16,201,143,.7);animation:pls 1.8s infinite}
+.near b{font-size:13.5px} .near small{font-size:11.5px;color:var(--mut)}
+@keyframes pls{70%{box-shadow:0 0 0 12px rgba(16,201,143,0)}100%{box-shadow:0 0 0 0 rgba(16,201,143,0)}}
+.cl.sk{pointer-events:none;opacity:.75}
+.shim{display:block;width:62px;height:20px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,.16),rgba(255,255,255,.05));background-size:200% 100%;animation:shm 1.1s infinite linear}
+@keyframes shm{to{background-position:-200% 0}}
+.calc{display:inline-flex;align-items:center;gap:8px}
+.calc i{width:14px;height:14px;border-radius:50%;border:2px solid rgba(16,201,143,.3);border-top-color:var(--em);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{opacity:0;transform:translateY(6px) scale(.9)}100%{opacity:1;transform:none}}
+.pill.lock{background:rgba(243,201,105,.13);color:var(--gold);font-variant-numeric:tabular-nums}
+.cl{background:linear-gradient(170deg,rgba(255,255,255,.055),rgba(255,255,255,.015));border:1.5px solid var(--line)}
+.cl .p b{background:linear-gradient(90deg,#EAF6F3,#bff3e2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cl.on .p b{background:linear-gradient(90deg,#10C98F,#12A9CC);-webkit-background-clip:text;background-clip:text}
+.prefs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.prefs::-webkit-scrollbar{display:none}
+.pf{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--mut);transition:.18s}
+.pf span{font-size:15px}
+.pf.on{color:#fff;background:linear-gradient(135deg,rgba(18,169,204,.28),rgba(16,201,143,.18));border-color:rgba(18,169,204,.6);box-shadow:0 8px 20px -12px rgba(18,169,204,.9)}
+.mk-car.runner{transition:none;width:40px;height:40px}
+.mk-car.runner .rc{transition:opacity .4s;filter:drop-shadow(0 0 10px rgba(16,201,143,.95))}
+.mk-car.runner::before{content:"";position:absolute;inset:4px;border-radius:50%;background:radial-gradient(rgba(16,201,143,.45),transparent 70%)}
 </style>
 </head>
 <body>
@@ -254,7 +297,7 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 
 <div class="top">
   <button class="cbtn" id="menuBtn" aria-label="Menyu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
-  <div class="brand"><div class="rate-chip" id="rateChip"><span class="dot"></span><span id="rateTxt">Tarif yüklənir…</span></div></div>
+  <div class="brand"><div class="wm" id="wm"><img src="icon-192.png" alt=""><span>Baku<b>Go</b></span></div><div class="rate-chip hidden" id="rateChip"><span class="dot"></span><span id="rateTxt">Tarif yüklənir…</span></div></div>
   <button class="cbtn" id="shareBtn" aria-label="Yerimi paylaş"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg></button>
 </div>
 <button class="cbtn locate" id="locBtn" aria-label="Mənim yerim"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7.5"/></svg></button>
@@ -269,7 +312,9 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
       <div class="hello" id="hello">Salam! <b>Hara gedirik?</b></div>
       <button class="where" id="whereBtn"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><span>Hara gedirsiniz?</span><small>İndi ▾</small></button>
       <div class="quick" id="quick"></div>
+      <div class="sec-h">Taksi xidmətləri</div>
       <div class="svc" id="svcRow"></div>
+      <div class="near" id="nearCard"></div>
       <div class="banner" id="promoBanner"><span class="e">🎁</span><div><b>İlk səfərə xoş gəlmisiniz</b><small>Promo kodunuz varsa, sifariş edəndə yazın</small></div></div>
     </section>
 
@@ -277,6 +322,8 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
     <section id="v-opts" class="hidden">
       <div class="trip-sum" id="tripSum"></div>
       <div class="cls" id="clsList"></div>
+      <div class="sec-h">Səfər əhvalı <small>sürücü görəcək</small></div>
+      <div class="prefs" id="prefRow"></div>
       <div class="opts" id="optRow">
         <button class="opt" id="oPay">💵 <span id="oPayT">Nağd</span></button>
         <button class="opt" id="oWhen">🕒 <span id="oWhenT">İndi</span></button>
@@ -365,7 +412,7 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
   <button class="mi" data-go="install"><span class="e">📲</span>Tətbiqi quraşdır</button>
   <button class="mi" data-go="support"><span class="e">💬</span>Dəstək</button>
   <button class="mi out" data-go="logout" id="miOut"><span class="e">🚪</span>Çıxış</button>
-  <div class="dfoot">BakuGo Taksi · v1.0 · <a class="lnk" href="privacy-policy.html" target="_blank">Gizlilik</a></div>
+  <div class="dfoot">BakuGo Taksi · v2.0 · <a class="lnk" href="privacy-policy.html" target="_blank">Gizlilik</a></div>
 </nav>
 
 <div id="modalRoot"></div>
@@ -447,7 +494,7 @@ function rateNow(at) {
   const rain = st.rainMode === "on" || (st.rainMode === "auto" && S.raining && !at);
   if (rain) return { type: "rain", perKm: +st.rainRate, label: "🌧 Yağış tarifi · 1 km " + money(st.rainRate) + " ₼" };
   if (isPeak(at)) return { type: "peak", perKm: +st.peakRate, label: "⚡ Pik saat · 1 km " + money(st.peakRate) + " ₼" };
-  return { type: "std", perKm: +st.perKm, label: "Standart · 1 km " + money(st.perKm) + " ₼" };
+  return { type: "std", perKm: +st.perKm, label: "" };
 }
 function priceFor(cls, km, at) {
   const r = rateNow(at); const base = Math.max(km, S.settings.minKm || 0) * r.perKm * (cls.mult || 1);
@@ -458,8 +505,9 @@ function priceFor(cls, km, at) {
 }
 function paintRate() {
   const r = rateNow(); const c = $("rateChip");
-  c.className = "rate-chip " + (r.type === "std" ? "" : r.type);
+  c.className = "rate-chip " + r.type; c.classList.toggle("hidden", r.type === "std");
   $("rateTxt").textContent = r.label;
+  if (S.view === "home") renderSvc();
 }
 setInterval(paintRate, 60000);
 
@@ -477,28 +525,32 @@ async function checkRain() {
 setInterval(checkRain, 10 * 60 * 1000);
 
 /* ---------------- Google Maps ---------------- */
-const STYLE_DARK = [
-  { elementType: "geometry", stylers: [{ color: "#0a1516" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#7f9a99" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#061011" }] },
+const STYLE_DARK = [ /* "Bakı gecəsi" — zümrüd/dəniz mavisi premium üslub */
+  { elementType: "geometry", stylers: [{ color: "#10272a" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#a3c4c0" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1d1f" }, { weight: 3 }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#1b2b2d" }] },
+  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#2c5458" }] },
   { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.neighborhood", elementType: "labels.text.fill", stylers: [{ color: "#5d7c79" }] },
-  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#0e1c1d" }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#d6f2ec" }] },
+  { featureType: "administrative.neighborhood", elementType: "labels.text.fill", stylers: [{ color: "#7fa9a4" }] },
+  { featureType: "landscape.man_made", elementType: "geometry", stylers: [{ color: "#132f33" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#0f2a27" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#143236" }] },
   { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#0b2a21" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#15262a" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0a1416" }] },
-  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#6f8f8c" }] },
-  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#1a2f33" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#1c3d43" }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#0d6266" }, { weight: 0.6 }] },
-  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#a6d6cf" }] },
-  { featureType: "road.local", elementType: "labels", stylers: [{ visibility: "simplified" }] },
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#04253a" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#2e7698" }] }
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#11463a" }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2a4c52" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0d2124" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#b4d3cf" }] },
+  { featureType: "road.local", elementType: "geometry.fill", stylers: [{ color: "#22403f" }] },
+  { featureType: "road.arterial", elementType: "geometry.fill", stylers: [{ color: "#33616a" }] },
+  { featureType: "road.highway", elementType: "geometry.fill", stylers: [{ color: "#1d7f7c" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#0b3c3f" }] },
+  { featureType: "road.highway", elementType: "labels.text.fill", stylers: [{ color: "#e3fff8" }] },
+  { featureType: "transit.line", elementType: "geometry", stylers: [{ color: "#3a2a44" }] },
+  { featureType: "transit.station", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a4a6b" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#6cc3e6" }] }
 ];
 const STYLE_DAY = [
   { elementType: "geometry", stylers: [{ color: "#f3f1ea" }] },
@@ -542,21 +594,30 @@ function defOverlay() {
   };
 }
 async function initMap() {
-  try { await loadMaps(); } catch (e) { mapFail(e.message); return; }
-  defOverlay();
+  try {
+    await loadMaps();
+    /* loading=async rejimində siniflər importLibrary ilə gəlir — əks halda Map/OverlayView boş ola bilər və xəritə görünmür */
+    if (google.maps.importLibrary) await Promise.all(["maps", "geocoding", "routes", "geometry"].map((l) => google.maps.importLibrary(l).catch(() => null)));
+    if (!google.maps.Map || !google.maps.OverlayView) throw new Error("Google Maps kitabxanası tam yüklənmədi");
+    defOverlay();
+    buildMap();
+  } catch (e) { console.error(e); mapFail(e.message || String(e)); return; }
+}
+function buildMap() {
   map = new google.maps.Map($("map"), {
     center: BAKU, zoom: 14, disableDefaultUI: true, clickableIcons: false, gestureHandling: "greedy",
-    styles: S.mapDark ? STYLE_DARK : STYLE_DAY, backgroundColor: S.mapDark ? "#0a1516" : "#f3f1ea", keyboardShortcuts: false
+    styles: S.mapDark ? STYLE_DARK : STYLE_DAY, backgroundColor: S.mapDark ? "#10272a" : "#f3f1ea", keyboardShortcuts: false
   });
   geocoder = new google.maps.Geocoder();
   mapsOK = true;
+  setTimeout(() => { if (map && google.maps.event) google.maps.event.trigger(map, "resize"); }, 400);
   map.addListener("dragstart", () => { if (S.pickMode) $("cpin").classList.add("lift"); });
   map.addListener("idle", () => { if (S.pickMode) { $("cpin").classList.remove("lift"); pickReverse(); } });
   if (S.pos) placeMe();
   /* GPS xəritədən əvvəl gəlibsə, ünvanı indi dəqiqləşdir */
   if (S.pick && S.pick.addr === "Mənim yerim") reverse(S.pick).then((a) => { if (a && S.pick && S.pick.addr === "Mənim yerim") S.pick.addr = a; });
 }
-function setMapStyle() { if (!map) return; map.setOptions({ styles: S.mapDark ? STYLE_DARK : STYLE_DAY, backgroundColor: S.mapDark ? "#0a1516" : "#f3f1ea" }); $("msT").textContent = S.mapDark ? "Gecə" : "Gündüz"; }
+function setMapStyle() { if (!map) return; map.setOptions({ styles: S.mapDark ? STYLE_DARK : STYLE_DAY, backgroundColor: S.mapDark ? "#10272a" : "#f3f1ea" }); $("msT").textContent = S.mapDark ? "Gecə" : "Gündüz"; }
 function placeMe() {
   if (!map || !HtmlMk || !S.pos) return;
   if (!meMk) { meMk = new HtmlMk(S.pos, "", "mk-me", 5); meMk.setMap(map); } else meMk.setPos(S.pos);
@@ -683,10 +744,11 @@ async function calcRoute() {
     } catch (e) {}
   }
   if (!path) { for (let i = 1; i < pts.length; i++) km += hav(pts[i - 1], pts[i]) * 1.35; min = km / 24 * 60; path = pts.map((p) => ({ lat: p.lat, lng: p.lng })); }
-  S.route = { km: Math.round(km * 10) / 10, min: Math.round(min), path };
+  S.route = { km: Math.round(km * 10) / 10, min: Math.round(min), path }; S.quoteKm = S.route.km;
   drawRoute();
 }
 function clearRoute() {
+  cancelAnimationFrame(carRun); if (carMk) { carMk.setMap(null); carMk = null; }
   routeLines.forEach((l) => l.setMap(null)); routeLines = []; pins.forEach((m) => m.setMap(null)); pins = [];
   clearInterval(dashTimer); dashTimer = null;
 }
@@ -704,6 +766,29 @@ function drawRoute() {
   S.stops.filter(Boolean).forEach((p, i) => { const m = new HtmlMk(p, pinHtml("s", i + 1, ""), "mk-pin", 7); m.setMap(map); pins.push(m); });
   const b = new HtmlMk(S.drop, pinHtml("b", "B", S.route.km + " km"), "mk-pin", 8); b.setMap(map); pins.push(b);
   setTimeout(() => fitTo(path), 60);
+  if (S.view === "opts") runCar(path);
+}
+/* Marşrut boyunca hərəkət edən parlaq avtomobil (önizləmə) */
+let carRun = null, carMk = null;
+function runCar(path) {
+  cancelAnimationFrame(carRun); if (carMk) { carMk.setMap(null); carMk = null; }
+  if (!path || path.length < 2 || !HtmlMk) return;
+  const seg = [], tot = [0];
+  for (let i = 1; i < path.length; i++) { const d = hav(path[i - 1], path[i]); seg.push(d); tot.push(tot[i - 1] + d); }
+  const L = tot[tot.length - 1]; if (!L) return;
+  carMk = new HtmlMk(path[0], `<div class="rc">${CAR_SVG("#10C98F")}</div>`, "mk-car runner", 9); carMk.setMap(map);
+  const dur = Math.min(9000, Math.max(3500, L * 900)); let t0 = null;
+  const step = (ts) => {
+    if (!carMk) return; if (t0 == null) t0 = ts;
+    const f = ((ts - t0) % (dur + 1200)) / dur; const k = Math.min(1, f) * L;
+    let i = 1; while (i < tot.length - 1 && tot[i] < k) i++;
+    const a = path[i - 1], b = path[i], sf = seg[i - 1] ? (k - tot[i - 1]) / seg[i - 1] : 0;
+    const p = { lat: a.lat + (b.lat - a.lat) * sf, lng: a.lng + (b.lng - a.lng) * sf };
+    const hd = Math.atan2((b.lng - a.lng) * Math.cos(a.lat * Math.PI / 180), b.lat - a.lat) * 180 / Math.PI;
+    carMk.setPos(p); const r = carMk.el.firstChild; if (r) { r.style.transform = `rotate(${hd}deg)`; r.style.opacity = f > 1 ? 0 : 1; }
+    carRun = requestAnimationFrame(step);
+  };
+  carRun = requestAnimationFrame(step);
 }
 
 /* ---------------- Yaxındakı sürücülər (canlı) ---------------- */
@@ -724,7 +809,7 @@ function loadNearby() {
         else if (m) { m.setPos(p); const inner = m.el.firstChild; if (inner) inner.style.transform = `rotate(${v.heading || 0}deg)`; }
       });
       for (const [id, m] of S.drivers) if (!seen.has(id)) { m.setMap(null); S.drivers.delete(id); }
-      S.nearCount = seen.size; if (S.view === "opts") renderOpts();
+      S.nearCount = seen.size; if (S.view === "opts") renderOpts(); renderNear();
     }, () => {});
   } catch (e) {}
 }
@@ -733,6 +818,7 @@ function hideNearby(h) { for (const m of S.drivers.values()) m.el.style.display 
 /* ---------------- Görünüşlər ---------------- */
 const VIEWS = ["home", "opts", "find", "ride", "rate"];
 function show(v) {
+  if (v !== "opts") { cancelAnimationFrame(carRun); if (carMk) { carMk.setMap(null); carMk = null; } }
   S.view = v; VIEWS.forEach((x) => $("v-" + x).classList.toggle("hidden", x !== v));
   $("sb").scrollTop = 0; hideNearby(v === "ride"); placeLocate();
 }
@@ -748,26 +834,42 @@ function renderHome() {
   if (!pl.home) q.unshift({ e: "🏠", t: "Ev ünvanı", sub: "Əlavə edin", set: "home" });
   $("quick").innerHTML = q.map((x, i) => `<button class="qp" data-q="${i}"><span class="ic">${x.e}</span><span><b>${esc(x.t)}</b><small>${esc(x.sub || (x.p && x.p.addr) || "")}</small></span></button>`).join("");
   $("quick").querySelectorAll(".qp").forEach((b) => b.onclick = () => { const x = q[+b.dataset.q]; if (x.set) openSearch(x.set); else { S.drop = { ...x.p }; goOptions(); } });
-  $("svcRow").innerHTML = S.settings.classes.map((c) => `<button data-c="${c.id}" class="${c.id === S.cls ? "on" : ""}"><span class="e">${c.e}</span>${esc(c.name)}</button>`).join("");
-  $("svcRow").querySelectorAll("button").forEach((b) => b.onclick = () => { S.cls = b.dataset.c; localStorage.setItem("bgtCls", S.cls); renderHome(); openSearch("drop"); });
+  renderSvc(); renderNear();
+}
+/* Ana ekranda kateqoriyalar: qiymət yalnız təyinat ünvanı tapılandan sonra görünür */
+function renderSvc() {
+  const km = S.drop && S.quoteKm ? S.quoteKm : null;
+  $("svcRow").innerHTML = S.settings.classes.map((c) => {
+    const pr = km != null ? `<span class="pr">${money(priceFor(c, km).price)} ₼</span>` : `<span class="pr wait">Ünvanı seçin</span>`;
+    return `<button data-c="${c.id}" class="${c.id === S.cls ? "on" : ""}">${carMini(c)}<b>${esc(c.name)}</b>${pr}</button>`;
+  }).join("");
+  $("svcRow").querySelectorAll("button").forEach((b) => b.onclick = () => { S.cls = b.dataset.c; localStorage.setItem("bgtCls", S.cls); if (S.drop) goOptions(); else { renderSvc(); openSearch("drop"); } });
+}
+function renderNear() {
+  const n = S.nearCount || 0, el = $("nearCard"); if (!el) return;
+  el.innerHTML = n ? `<span class="pulse"></span><b>${n} sürücü yaxınlıqdadır</b><small>Orta gəlmə vaxtı ~${Math.max(2, Math.min(9, Math.round(9 - n / 2)))} dəq</small>`
+    : `<span class="pulse"></span><b>BakuGo sürücüləri hazırdır</b><small>Sifariş edin — ən yaxın sürücü dərhal xəbər alacaq</small>`;
 }
 async function goOptions() {
   if (!S.pick) { toast("Əvvəlcə götürülmə nöqtəsini seçin"); openSearch("pick"); return; }
   if (!S.drop) { openSearch("drop"); return; }
-  closeSearch(); show("opts"); $("tripSum").innerHTML = `<span>Marşrut hesablanır…</span>`; $("clsList").innerHTML = ""; $("orderBtn").disabled = true;
-  await calcRoute(); renderOpts();
+  closeSearch(); show("opts"); S.route = null; $("tripSum").innerHTML = `<span class="calc"><i></i>Ünvan dəqiqləşir, qiymət hesablanır…</span>`;
+  $("clsList").innerHTML = S.settings.classes.map((c) => `<div class="cl sk">${carMini(c)}<span class="t"><b>${esc(c.name)}</b><small>${esc(c.desc)}</small></span><span class="p"><i class="shim"></i></span></div>`).join("");
+  $("orderBtn").disabled = true; $("orderPrice").textContent = "";
+  await calcRoute(); S.lockUntil = Date.now() + 5 * 60000; renderOpts(true); renderSvc();
 }
-function carMini(c) { return `<svg class="car" viewBox="0 0 116 68"><defs><linearGradient id="g${c.id}" x1="0" x2="1"><stop offset="0" stop-color="${c.color}"/><stop offset="1" stop-color="#0b2a2a"/></linearGradient></defs><path d="M10 46c0-8 4-12 12-14l14-12c4-3 8-4 13-4h22c6 0 10 2 14 6l10 10c8 1 14 5 14 14v6c0 2-2 4-4 4H14c-2 0-4-2-4-4z" fill="url(#g${c.id})"/><path d="M40 22h18v12H30zM62 22h12c4 0 7 2 9 5l5 7H62z" fill="#0a1a19" opacity=".75"/><circle cx="32" cy="56" r="9" fill="#0b1213" stroke="#3b4d4b" stroke-width="3"/><circle cx="86" cy="56" r="9" fill="#0b1213" stroke="#3b4d4b" stroke-width="3"/></svg>`; }
-function renderOpts() {
+let carSeq = 0;
+function carMini(c) { const gid = "g" + c.id + (++carSeq); return `<svg class="car" viewBox="0 0 116 68"><defs><linearGradient id="${gid}" x1="0" x2="1"><stop offset="0" stop-color="${c.color}"/><stop offset="1" stop-color="#0b2a2a"/></linearGradient></defs><path d="M10 46c0-8 4-12 12-14l14-12c4-3 8-4 13-4h22c6 0 10 2 14 6l10 10c8 1 14 5 14 14v6c0 2-2 4-4 4H14c-2 0-4-2-4-4z" fill="url(#${gid})"/><path d="M40 22h18v12H30zM62 22h12c4 0 7 2 9 5l5 7H62z" fill="#0a1a19" opacity=".75"/><circle cx="32" cy="56" r="9" fill="#0b1213" stroke="#3b4d4b" stroke-width="3"/><circle cx="86" cy="56" r="9" fill="#0b1213" stroke="#3b4d4b" stroke-width="3"/></svg>`; }
+function renderOpts(fresh) {
   if (!S.route) return;
   const r = rateNow(S.when ? new Date(S.when) : null);
-  const pill = `<span class="pill ${r.type}">${r.type === "rain" ? "🌧 Yağış" : r.type === "peak" ? "⚡ Pik saat" : "Standart"} · 1 km ${money(r.perKm)} ₼</span>`;
+  const pill = r.type === "std" ? `<span class="pill lock" id="lockPill">🔒 Qiymət sabitdir</span>` : `<span class="pill ${r.type}">${r.type === "rain" ? "🌧 Yağış" : "⚡ Pik saat"} · 1 km ${money(r.perKm)} ₼</span>`;
   $("tripSum").innerHTML = `<span>🛣 <b>${S.route.km} km</b></span><span>⏱ <b>${fmtMin(S.route.min)}</b></span>${pill}`;
   const near = S.nearCount || 0;
   $("clsList").innerHTML = S.settings.classes.map((c) => {
     const p = priceFor(c, S.route.km, S.when ? new Date(S.when) : null);
     const eta = near ? Math.max(2, Math.round(3 + Math.random() * 4)) : null;
-    return `<button class="cl ${c.id === S.cls ? "on" : ""}" data-c="${c.id}">${carMini(c)}<span class="t"><b>${esc(c.name)} ${c.tag ? `<span class="tag">${esc(c.tag)}</span>` : ""}</b><small>${esc(c.desc)} · 👤${c.seats}${eta ? " · " + eta + " dəq" : ""}</small></span><span class="p"><b>${money(p.price)} ₼</b>${p.disc ? `<s>${money(p.full)} ₼</s>` : ""}</span></button>`;
+    return `<button class="cl ${c.id === S.cls ? "on" : ""}" data-c="${c.id}">${carMini(c)}<span class="t"><b>${esc(c.name)} ${c.tag ? `<span class="tag">${esc(c.tag)}</span>` : ""}</b><small>${esc(c.desc)} · 👤${c.seats}${eta ? " · " + eta + " dəq" : ""}</small></span><span class="p"><b class="${fresh ? "pop" : ""}">${money(p.price)} ₼</b>${p.disc ? `<s>${money(p.full)} ₼</s>` : ""}</span></button>`;
   }).join("");
   $("clsList").querySelectorAll(".cl").forEach((b) => b.onclick = () => { S.cls = b.dataset.c; localStorage.setItem("bgtCls", S.cls); renderOpts(); });
   const cls = S.settings.classes.find((c) => c.id === S.cls) || S.settings.classes[0];
@@ -780,8 +882,24 @@ function renderOpts() {
   $("oForT").textContent = S.forWho ? S.forWho.name || "Başqası üçün" : "Özüm üçün";
   $("oPromoT").textContent = S.promo ? S.promo.code + " (−" + S.promo.percent + "%)" : "Promo kod";
   $("oNoteT").textContent = S.note ? "Qeyd ✓" : "Sürücüyə qeyd";
+  renderPrefs();
   ["oWhen", "oFor", "oPromo", "oNote"].forEach((id, i) => $(id).classList.toggle("on", !![S.when, S.forWho, S.promo, S.note][i]));
 }
+
+/* Səfər əhvalı — sürücüyə istəklər */
+const PREFS = [["quiet", "🤫", "Sakit səfər"], ["ac", "❄️", "Kondisioner"], ["music", "🎵", "Musiqi"], ["child", "👶", "Uşaq oturacağı"], ["pet", "🐾", "Ev heyvanı"], ["bag", "🧳", "Böyük baqaj"]];
+S.prefs = (() => { try { return JSON.parse(localStorage.getItem("bgtPrefs") || "[]"); } catch (e) { return []; } })();
+function renderPrefs() {
+  $("prefRow").innerHTML = PREFS.map(([id, e, t]) => `<button class="pf ${S.prefs.includes(id) ? "on" : ""}" data-p="${id}"><span>${e}</span>${t}</button>`).join("");
+  $("prefRow").querySelectorAll(".pf").forEach((b) => b.onclick = () => { const id = b.dataset.p; S.prefs = S.prefs.includes(id) ? S.prefs.filter((x) => x !== id) : [...S.prefs, id]; localStorage.setItem("bgtPrefs", JSON.stringify(S.prefs)); b.classList.toggle("on"); if (navigator.vibrate) navigator.vibrate(8); });
+}
+/* Qiymət kilidi: 5 dəqiqə ərzində qiymət dəyişmir */
+setInterval(() => {
+  const el = $("lockPill"); if (!el || !S.lockUntil) return;
+  const left = Math.max(0, S.lockUntil - Date.now()); const m = Math.floor(left / 60000), s = Math.floor(left / 1000) % 60;
+  el.textContent = left ? `🔒 Qiymət sabitdir · ${m}:${String(s).padStart(2, "0")}` : "🔄 Qiymət yenilənir";
+  if (!left && S.view === "opts") { S.lockUntil = Date.now() + 5 * 60000; checkRain(); }
+}, 1000);
 
 /* ---------------- Axtarış paneli ---------------- */
 let sTarget = "drop", sTimer = null, sItems = [];
@@ -868,7 +986,7 @@ $("pickNo").onclick = () => { const t = S.pickMode; endPick(); if (t !== "home" 
 
 /* ---------------- Ana düymələr ---------------- */
 $("whereBtn").onclick = () => openSearch("drop");
-$("backHome").onclick = () => { clearRoute(); S.route = null; show("home"); if (S.pos) panTo(S.pos, 15); };
+$("backHome").onclick = () => { clearRoute(); S.route = null; show("home"); renderHome(); if (S.pos) panTo(S.pos, 15); };
 $("locBtn").onclick = () => { if (!S.pos) { toast("GPS icazəsini yoxlayın"); startGeo(); return; } panTo(S.pos, 16); };
 $("shareBtn").onclick = () => shareLoc();
 async function shareLoc(extra) {
@@ -1010,7 +1128,7 @@ $("orderBtn").onclick = async () => {
     stops: S.stops.filter(Boolean).map((s) => ({ lat: s.lat, lng: s.lng, addr: s.addr })),
     km: S.route.km, min: S.route.min, cls: cls.id, clsName: cls.name, mult: cls.mult,
     rateType: p.rate.type, perKm: p.rate.perKm, priceFull: p.full, discount: p.disc, price: p.price, promo: S.promo ? S.promo.code : "",
-    pay: S.pay, note: S.note, scheduledAt: S.when || null, status: S.when ? "scheduled" : "searching",
+    pay: S.pay, note: S.note, prefs: S.prefs.slice(), prefsText: S.prefs.map((id) => (PREFS.find((x) => x[0] === id) || [, , id])[2]).join(", "), scheduledAt: S.when || null, status: S.when ? "scheduled" : "searching",
     createdAt: serverTimestamp(), createdAtMs: Date.now(), app: "taksi", platform: /android/i.test(navigator.userAgent) ? "android" : /iphone|ipad/i.test(navigator.userAgent) ? "ios" : "web"
   };
   $("orderBtn").disabled = true;
@@ -1044,7 +1162,7 @@ function endRide() {
   clearInterval(findTimer); clearInterval(tick);
   S.ride = null; S.rideId = null; localStorage.removeItem("bgtRide");
   if (radarMk) { radarMk.setMap(null); radarMk = null; } if (driverMk) { driverMk.setMap(null); driverMk = null; }
-  clearRoute(); S.route = null; S.drop = null; S.stops = []; S.when = null; S.forWho = null; S.promo = null; S.note = "";
+  clearRoute(); S.route = null; S.quoteKm = null; S.drop = null; S.stops = []; S.when = null; S.forWho = null; S.promo = null; S.note = "";
   if (S.pos) S.pick = { ...S.pos, addr: S.pick && S.pick.lat === S.pos.lat ? S.pick.addr : "Mənim yerim" };
   show("home"); renderHome(); if (S.pos) panTo(S.pos, 15);
 }
