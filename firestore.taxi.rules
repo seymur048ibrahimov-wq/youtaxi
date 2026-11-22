@@ -78,7 +78,7 @@ service cloud.firestore {
         || (resource.data.get('driverId', '') == request.auth.uid
           && resource.data.status in ['accepted','arrived','ongoing']
           && request.resource.data.status in ['arrived','ongoing','completed','cancelled']
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','arrivedAtMs','startedAtMs','completedAtMs','waitFee','finalPrice','cancelledBy','cancelReason','cancelledAtMs']))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','arrivedAtMs','startedAtMs','completedAtMs','waitFee','finalPrice','commissionPct','commission','driverEarning','cancelledBy','cancelReason','cancelledAtMs']))
         || isTaxiAdmin());
 
       allow delete: if isTaxiAdmin();
