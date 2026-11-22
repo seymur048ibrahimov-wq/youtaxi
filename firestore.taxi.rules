@@ -1,0 +1,87 @@
+// ============================================================================
+//  GO ROUTE Taksi + Sürücü — Firestore qaydaları (YALNIZ taksi kolleksiyaları)
+//
+//  DİQQƏT: "bkaugo" layihəsi digər tətbiqlərlə (kuryer, müştəri, admin…) ortaqdır.
+//  Firestore-da yalnız BİR qayda faylı var — "firebase deploy" onu tam əvəz edir.
+//  Ona görə bu faylı olduğu kimi deploy ETMƏYİN. Aşağıdakı funksiya və "match"
+//  bloklarını Firebase Console → Firestore → Rules-dakı MÖVCUD qaydaların
+//  "match /databases/{database}/documents { ... }" daxilinə əlavə edin.
+//  (Mövcud qaydalardakı eyni adlı funksiya varsa adını dəyişin.)
+//
+//  Admin: Console-da "admins/{uid}" sənədi yaradın (hər hansı sahə ilə) — həmin
+//  istifadəçi sürücüləri təsdiqləyə bilər (taxiDriverProfiles.approved = true).
+//  Bir də mövcud admin mexanizminiz varsa isTaxiAdmin()-i ona uyğunlaşdırın.
+// ============================================================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function taxiSignedIn() { return request.auth != null; }
+    function isTaxiAdmin() {
+      return taxiSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function isApprovedTaxiDriver() {
+      return taxiSignedIn()
+        && exists(/databases/$(database)/documents/taxiDriverProfiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/taxiDriverProfiles/$(request.auth.uid)).data.approved == true;
+    }
+
+    // ---- Sürücü profili (şəxsi; yalnız özü və admin oxuyur) ----
+    match /taxiDriverProfiles/{uid} {
+      allow read: if taxiSignedIn() && (request.auth.uid == uid || isTaxiAdmin());
+      allow create: if taxiSignedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.approved == false
+        && request.resource.data.keys().hasOnly(['uid','name','phone','car','color','plate','cls','email','approved','rating','trips','createdAtMs','photo']);
+      allow update: if isTaxiAdmin()
+        || (taxiSignedIn() && request.auth.uid == uid
+            && request.resource.data.approved == resource.data.approved
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','phone','car','color','plate','cls','photo']));
+      allow delete: if taxiSignedIn() && (request.auth.uid == uid || isTaxiAdmin());
+    }
+
+    // ---- Canlı sürücü vəziyyəti (müştərilər xəritədə görür; ad/telefon yoxdur) ----
+    match /taxiDrivers/{id} {
+      allow read: if taxiSignedIn();
+      allow create, update: if taxiSignedIn() && request.auth.uid == id && isApprovedTaxiDriver()
+        && request.resource.data.keys().hasOnly(['online','busy','cls','uid','name','lat','lng','heading','acc','updatedAtMs']);
+      allow delete: if taxiSignedIn() && (request.auth.uid == id || isTaxiAdmin());
+    }
+
+    // ---- Sifarişlər ----
+    match /taxiRides/{id} {
+      // sərnişin öz sifarişini; sürücü öz sifarişini; təsdiqlənmiş sürücü isə axtarışdakı sifarişləri görür
+      allow read: if taxiSignedIn() && (
+        resource.data.uid == request.auth.uid
+        || resource.data.get('driverId', '') == request.auth.uid
+        || (resource.data.status == 'searching' && isApprovedTaxiDriver())
+        || isTaxiAdmin());
+
+      allow create: if taxiSignedIn() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status in ['searching', 'scheduled'];
+
+      allow update: if taxiSignedIn() && (
+        // 1) Sərnişin: ləğv, yenidən axtarış, qiymətləndirmə
+        (resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','cancelledBy','cancelReason','cancelledAtMs','createdAtMs','retries','rating','tip','feedback','ratedAtMs'])
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status'])
+              || (request.resource.data.status == 'cancelled' && resource.data.status in ['searching','scheduled','accepted','arrived','no_driver'])
+              || (request.resource.data.status == 'no_driver' && resource.data.status == 'searching')
+              || (request.resource.data.status == 'searching' && resource.data.status in ['no_driver','scheduled'])))
+        // 2) Sürücü sifarişi qəbul edir
+        || (isApprovedTaxiDriver()
+          && resource.data.status == 'searching'
+          && request.resource.data.status == 'accepted'
+          && request.resource.data.get('driverId', '') == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','driverId','driver','acceptedAtMs']))
+        // 3) Sürücü öz sifarişinin gedişatını yeniləyir
+        || (resource.data.get('driverId', '') == request.auth.uid
+          && resource.data.status in ['accepted','arrived','ongoing']
+          && request.resource.data.status in ['arrived','ongoing','completed','cancelled']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','arrivedAtMs','startedAtMs','completedAtMs','waitFee','finalPrice','cancelledBy','cancelReason','cancelledAtMs']))
+        || isTaxiAdmin());
+
+      allow delete: if isTaxiAdmin();
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "BakuGo Taksi",
-  "short_name": "BakuGo Taksi",
+  "name": "Go Route Taksi",
+  "short_name": "Go Route Taksi",
   "description": "Bakıda premium taksi: bir toxunuşla sifariş, sabit qiymət, canlı izləmə.",
   "lang": "az",
   "dir": "ltr",
@@ -11,15 +11,66 @@
   "orientation": "portrait",
   "background_color": "#04100F",
   "theme_color": "#05100F",
-  "categories": ["travel", "navigation"],
+  "categories": [
+    "travel",
+    "navigation"
+  ],
   "prefer_related_applications": false,
   "icons": [
-    { "src": "icon-48.png", "sizes": "48x48", "type": "image/png", "purpose": "any" },
-    { "src": "icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
-    { "src": "icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Taksi çağır",
+      "short_name": "Sifariş",
+      "url": "./?source=shortcut",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }

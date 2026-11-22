@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<title>BakuGo Taksi</title>
-<meta name="description" content="BakuGo Taksi — Bakıda premium taksi: bir toxunuşla sifariş, sabit qiymət, canlı izləmə.">
+<title>Go Route Taksi</title>
+<meta name="description" content="Go Route Taksi — Bakıda premium taksi: bir toxunuşla sifariş, sabit qiymət, canlı izləmə.">
 <meta name="theme-color" content="#05100F">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="manifest.json">
@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BakuGo Taksi">
+<meta name="apple-mobile-web-app-title" content="Go Route Taksi">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
@@ -393,14 +393,14 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
 </style>
 </head>
 <body>
-<div class="splash" id="splash"><img src="icon-192.png" alt=""><h1>Baku<span>Go</span> Taksi</h1><p>Premium səfər</p></div>
+<div class="splash" id="splash"><img src="icon-192.png" alt=""><h1>Go <span>Route</span> Taksi</h1><p>Premium səfər</p></div>
 
 <div id="map"></div>
 <div class="center-pin hidden" id="cpin"><div class="pin a"><i>A</i></div></div>
 
 <div class="top">
   <button class="cbtn" id="menuBtn" aria-label="Menyu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
-  <div class="brand"><div class="wm" id="wm"><img src="icon-192.png" alt=""><span>Baku<b>Go</b></span></div><div class="rate-chip hidden" id="rateChip"><span class="dot"></span><span id="rateTxt">Tarif yüklənir…</span></div></div>
+  <div class="brand"><div class="wm" id="wm"><img src="icon-192.png" alt=""><span>Go <b>Route</b></span></div><div class="rate-chip hidden" id="rateChip"><span class="dot"></span><span id="rateTxt">Tarif yüklənir…</span></div></div>
   <button class="cbtn" id="shareBtn" aria-label="Yerimi paylaş"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg></button>
 </div>
 <button class="mapnote hidden" id="mapNote">🔑 Google API problemi · yoxla</button>
@@ -522,19 +522,19 @@ textarea.inp{height:auto;padding:12px 16px;min-height:80px}
   <button class="mi" data-go="apicheck"><span class="e">🔑</span>Google API yoxlaması</button>
   <button class="mi" data-go="support"><span class="e">💬</span>Dəstək</button>
   <button class="mi out" data-go="logout" id="miOut"><span class="e">🚪</span>Çıxış</button>
-  <div class="dfoot">BakuGo Taksi · v3.1 · <a class="lnk" href="privacy-policy.html" target="_blank">Gizlilik</a></div>
+  <div class="dfoot">Go Route Taksi · v3.1 · <a class="lnk" href="privacy-policy.html" target="_blank">Gizlilik</a></div>
 </nav>
 
 <div id="modalRoot"></div>
 <div class="toast" id="toast"></div>
 <script type="module">
 /* =====================================================================
-   BakuGo Taksi — müştəri tətbiqi
+   Go Route Taksi — müştəri tətbiqi
    Firebase "npm install firebase" üslubunda import olunur (importmap → CDN).
    ===================================================================== */
 import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, onSnapshot, query, where, getDocs, serverTimestamp, limit } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut, deleteUser } from "firebase/auth";
+import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, onSnapshot, query, where, getDocs, serverTimestamp, limit, deleteField } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBQIDfObXpxNa1hVAYDmigSi9u49y_BJQc",
@@ -1180,6 +1180,7 @@ function loadNearby() {
       const seen = new Set(); S.nearby = [];
       snap.forEach((d) => {
         const v = d.data(); if (typeof v.lat !== "number" || typeof v.lng !== "number" || v.busy === true) return;
+        if (v.updatedAtMs && Date.now() - v.updatedAtMs > 120000) return;   // 2 dəqiqədən köhnə (donmuş) sürücüləri göstərmə
         const p = { lat: v.lat, lng: v.lng }; if (S.pos && hav(S.pos, p) > 8) return;
         seen.add(d.id); S.nearby.push({ p, cls: v.cls || "eko" });
         let m = S.drivers.get(d.id);
@@ -1239,7 +1240,7 @@ function nearestEta(clsId) {
 function renderNear() {
   const n = S.nearCount || 0, el = $("nearCard"); if (!el) return;
   el.innerHTML = n ? `<span class="pulse"></span><b>${n} sürücü yaxınlıqdadır</b><small>Orta gəlmə vaxtı ~${(nearestEta() || 5)} dəq</small>`
-    : `<span class="pulse"></span><b>BakuGo sürücüləri hazırdır</b><small>Sifariş edin — ən yaxın sürücü dərhal xəbər alacaq</small>`;
+    : `<span class="pulse"></span><b>Go Route sürücüləri hazırdır</b><small>Sifariş edin — ən yaxın sürücü dərhal xəbər alacaq</small>`;
 }
 async function goOptions() {
   if (!S.pick) { toast("Əvvəlcə götürülmə nöqtəsini seçin"); openSearch("pick"); return; }
@@ -1483,7 +1484,7 @@ async function shareLoc(extra) {
   const p = S.pos || (S.pick && S.pick);
   if (!p) { toast("Yeriniz hələ təyin olunmayıb"); return; }
   const text = (extra || "Mənim yerim") + ": https://maps.google.com/?q=" + p.lat.toFixed(6) + "," + p.lng.toFixed(6);
-  try { if (navigator.share) await navigator.share({ title: "BakuGo Taksi", text }); else { await navigator.clipboard.writeText(text); toast("Link kopyalandı"); } } catch (e) {}
+  try { if (navigator.share) await navigator.share({ title: "Go Route Taksi", text }); else { await navigator.clipboard.writeText(text); toast("Link kopyalandı"); } } catch (e) {}
 }
 
 /* ---------------- Modal köməkçisi ---------------- */
@@ -1566,8 +1567,17 @@ function profileModal(cb) {
     <label class="fl">Telefon (sürücü sizə zəng edəcək)<input class="inp" id="prP" type="tel" placeholder="+994 50 000 00 00" value="${esc(S.prof.phone || "")}"></label>
     <label class="fl">Etibarlı şəxsin telefonu (SOS üçün, istəyə bağlı)<input class="inp" id="prT" type="tel" placeholder="+994 …" value="${esc((S.prof.taxi && S.prof.taxi.trusted) || "")}"></label>
     <div class="err" id="prE"></div><button class="cta" id="prOk">Yadda saxla</button>
-    <p style="color:var(--mut2);font-size:12px;margin-top:14px">${esc(S.me ? S.me.email || "" : "")} · <a class="lnk" href="delete-account.html" target="_blank">Hesabı sil</a></p>`,
+    <p style="color:var(--mut2);font-size:12px;margin-top:14px">${esc(S.me ? S.me.email || "" : "")} · <button class="lnk" id="prDel" style="color:#ff7b8c">Hesabı və məlumatlarımı sil</button></p>`,
   () => {
+    $("prDel").onclick = async () => {
+      if (S.ride && ["searching", "accepted", "arrived", "ongoing"].includes(S.ride.status)) { toast("Aktiv sifarişiniz var"); return; }
+      if (!confirm("Hesabınız və profil məlumatlarınız həmişəlik silinəcək (bu hesab digər Go Route xidmətləri üçün də istifadə olunursa, orada da silinir). Davam edilsin?")) return;
+      const u = auth.currentUser, last = u && u.metadata && u.metadata.lastSignInTime ? Date.parse(u.metadata.lastSignInTime) : 0;
+      if (!u) return;
+      if (Date.now() - last > 5 * 60 * 1000) { toast("Təhlükəsizlik üçün çıxış edib yenidən daxil olun, sonra hesabı silin", 5500); return; }
+      try { await updateDoc(doc(db, "users", u.uid), { taxi: deleteField(), name: deleteField(), phone: deleteField(), email: deleteField() }).catch(() => {}); await deleteUser(u); closeModal(); toast("Hesabınız silindi"); }
+      catch (e) { toast(fbErr(e), 4000); }
+    };
     $("prOk").onclick = async () => {
       const n = $("prN").value.trim(), p = normPhone($("prP").value), t = $("prT").value.trim() ? normPhone($("prT").value) : "";
       if (!n) { $("prE").textContent = "Adınızı yazın"; return; } if (!p) { $("prE").textContent = "Telefonu düzgün yazın: 050 000 00 00"; return; }
@@ -1655,8 +1665,8 @@ function sysNotify(msg) {
   try {
     if (!("Notification" in window) || Notification.permission !== "granted" || !document.hidden) return;
     const o = { body: msg, icon: "icon-192.png", badge: "icon-96.png", tag: "bgt-ride", renotify: true, vibrate: [120, 60, 120] };
-    if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then((r) => r.showNotification("BakuGo Taksi", o)).catch(() => new Notification("BakuGo Taksi", o));
-    else new Notification("BakuGo Taksi", o);
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then((r) => r.showNotification("Go Route Taksi", o)).catch(() => new Notification("Go Route Taksi", o));
+    else new Notification("Go Route Taksi", o);
   } catch (e) {}
 }
 
@@ -1672,7 +1682,7 @@ async function permFlow(force) {
     const lbl = st === "granted" ? "✓ Verildi" : st === "denied" ? "Bağlıdır" : st === "unsupported" ? "Dəstəklənmir" : "İcazə ver";
     return `<div class="prm ${st}" id="pr-${id}"><span class="pe">${e}</span><div class="pt"><b>${t}</b><small>${d}</small></div><button class="pb" id="pb-${id}" ${st === "granted" || st === "unsupported" ? "disabled" : ""}>${lbl}</button></div>`;
   };
-  const howTo = `<div class="phelp" id="pHelp" style="display:none"><b>İcazə bağlanıb — belə açın:</b><br>• <b>Android Chrome:</b> ünvan sətrindəki 🔒 (və ya ⋮ → ℹ️) → <b>İcazələr</b> → <b>Yer</b> → <b>İcazə ver</b><br>• <b>Quraşdırılmış tətbiq:</b> Parametrlər → Tətbiqlər → BakuGo Taksi → İcazələr → <b>Yer</b> → "Tətbiq istifadə edilərkən"<br>• <b>iPhone:</b> Parametrlər → Məxfilik → Yer xidmətləri → Safari → "İstifadə zamanı"<br>Sonra səhifəni yeniləyin.</div>`;
+  const howTo = `<div class="phelp" id="pHelp" style="display:none"><b>İcazə bağlanıb — belə açın:</b><br>• <b>Android Chrome:</b> ünvan sətrindəki 🔒 (və ya ⋮ → ℹ️) → <b>İcazələr</b> → <b>Yer</b> → <b>İcazə ver</b><br>• <b>Quraşdırılmış tətbiq:</b> Parametrlər → Tətbiqlər → Go Route Taksi → İcazələr → <b>Yer</b> → "Tətbiq istifadə edilərkən"<br>• <b>iPhone:</b> Parametrlər → Məxfilik → Yer xidmətləri → Safari → "İstifadə zamanı"<br>Sonra səhifəni yeniləyin.</div>`;
   modal("Xoş gəlmisiniz 👋", `<div class="phero"><img src="icon-192.png" alt=""><p>Sizi tez tapmaq və sürücünün harada olduğunu göstərmək üçün iki icazə lazımdır.</p></div>
     ${row("geo", "📍", "Yer (GPS)", "Götürülmə nöqtəniz avtomatik tapılsın, sürücü sizi asan tapsın", geo)}
     ${row("nt", "🔔", "Bildirişlər", "\"Sürücü tapıldı\", \"Sürücü gəldi\" xəbərləri tətbiq bağlı olanda da gəlsin", nt)}
@@ -1855,12 +1865,12 @@ function cancelFlow() {
 $("cancelFind").onclick = cancelFlow; $("cancelRide").onclick = cancelFlow;
 $("aCall").onclick = () => { const p = S.ride && S.ride.driver && S.ride.driver.phone; if (p) location.href = "tel:" + p; else toast("Sürücünün nömrəsi hələ yoxdur"); };
 $("aMsg").onclick = () => { const p = S.ride && S.ride.driver && S.ride.driver.phone; if (p) location.href = "sms:" + p; else toast("Sürücünün nömrəsi hələ yoxdur"); };
-$("aShare").onclick = () => { const d = (S.ride && S.ride.driver) || {}; shareLoc(`BakuGo Taksi ilə yoldayam — ${[d.color, d.car].filter(Boolean).join(" ")} ${d.plate || ""}, sürücü ${d.name || ""}. Yerim`); };
+$("aShare").onclick = () => { const d = (S.ride && S.ride.driver) || {}; shareLoc(`Go Route Taksi ilə yoldayam — ${[d.color, d.car].filter(Boolean).join(" ")} ${d.plate || ""}, sürücü ${d.name || ""}. Yerim`); };
 $("aSos").onclick = () => modal("🆘 Təcili yardım", `<p style="color:var(--mut);font-size:13.5px;margin:0 0 12px">Təhlükədə olduğunuzu hiss edirsinizsə, dərhal 112-yə zəng edin.</p>
   <a class="cta danger" href="tel:112" style="text-decoration:none">📞 112-yə zəng et</a>
   ${S.prof.taxi && S.prof.taxi.trusted ? `<button class="ghost" id="sosT">Etibarlı şəxsə yerimi göndər</button>` : `<button class="ghost" id="sosSet">Etibarlı şəxs əlavə et</button>`}
   <button class="ghost" id="sosSh">Yerimi paylaş</button>`, () => {
-  if ($("sosT")) $("sosT").onclick = () => { const p = S.pos || S.pick; const d = (S.ride && S.ride.driver) || {}; location.href = `sms:${S.prof.taxi.trusted}?body=${encodeURIComponent(`Təcili! BakuGo Taksi: ${d.car || ""} ${d.plate || ""}, sürücü ${d.name || ""}. Yerim: https://maps.google.com/?q=${p.lat},${p.lng}`)}`; };
+  if ($("sosT")) $("sosT").onclick = () => { const p = S.pos || S.pick; const d = (S.ride && S.ride.driver) || {}; location.href = `sms:${S.prof.taxi.trusted}?body=${encodeURIComponent(`Təcili! Go Route Taksi: ${d.car || ""} ${d.plate || ""}, sürücü ${d.name || ""}. Yerim: https://maps.google.com/?q=${p.lat},${p.lng}`)}`; };
   if ($("sosSet")) $("sosSet").onclick = () => profileModal();
   $("sosSh").onclick = () => shareLoc("Təcili — mənim yerim");
 });
@@ -1895,7 +1905,7 @@ document.querySelectorAll(".mi").forEach((b) => b.onclick = async () => {
   if (g === "install") { if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; } else if (matchMedia("(display-mode: standalone)").matches || navigator.standalone) toast("✅ Tətbiq artıq quraşdırılıb"); else toast(/iphone|ipad/i.test(navigator.userAgent) ? "Safari: Paylaş ⬆️ → «Ana ekrana əlavə et»" : "Brauzer menyusu ⋮ → «Tətbiqi quraşdır»", 5000); }
   if (g === "apicheck") apiCheck();
   if (g === "perms") permFlow(true);
-  if (g === "support") open(`https://wa.me/${S.settings.whatsapp}?text=${encodeURIComponent("Salam, BakuGo Taksi ilə bağlı sualım var")}`, "_blank");
+  if (g === "support") open(`https://wa.me/${S.settings.whatsapp}?text=${encodeURIComponent("Salam, Go Route Taksi ilə bağlı sualım var")}`, "_blank");
   if (g === "logout") { await signOut(auth); toast("Hesabdan çıxdınız"); }
 });
 function placesModal() {
