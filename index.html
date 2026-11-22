@@ -964,12 +964,21 @@ new ResizeObserver(() => {
 addEventListener("resize", placeLocate);
 
 /* ---------------- Mövqe ---------------- */
+/* Sürücü qəbul etdikdən sonra (gəlib çatana qədər) sərnişinin yeri sifarişə yazılır — sürücü xəritədə görür */
+let lastPaxPush = 0, lastPaxPos = null;
+function pushMyPos(force) {
+  const r = S.ride; if (!r || !S.pos || !["accepted", "arrived"].includes(r.status)) return;
+  const now = Date.now(), moved = lastPaxPos ? hav(lastPaxPos, S.pos) * 1000 : 999;
+  if (!force && (now - lastPaxPush < 8000 || (moved < 8 && now - lastPaxPush < 30000))) return;
+  lastPaxPush = now; lastPaxPos = { ...S.pos };
+  updateDoc(doc(db, "taxiRides", r.id), { custLat: S.pos.lat, custLng: S.pos.lng, custAtMs: now }).catch(() => {});
+}
 let firstFix = true;
 function startGeo() {
   if (!navigator.geolocation) { noGeo(); return; }
   navigator.geolocation.watchPosition((p) => {
     S.pos = { lat: p.coords.latitude, lng: p.coords.longitude }; S.posAcc = p.coords.accuracy || 0;
-    placeMe();
+    placeMe(); pushMyPos();
     /* İlk mövqe kobud ola bilər — daha dəqiq GPS gələndə götürülmə nöqtəsini yeniləyirik */
     if (!firstFix && !S.pickUser && S.pick && S.pick.auto && S.view === "home" && S.posAcc + 20 < (S.pick.acc || 1e9) && hav(S.pick, S.pos) * 1000 > 25) {
       S.pick = { ...S.pos, addr: S.pick.addr, auto: true, acc: S.posAcc };
@@ -1657,6 +1666,7 @@ function watchRide(id) {
 }
 function onStatus(a, b) {
   if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+  if (b === "accepted" || b === "arrived") pushMyPos(true);
   const msg = { accepted: "🚕 Sürücü tapıldı!", arrived: "📍 Sürücü sizi gözləyir", ongoing: "🛣 Səfər başladı. Xoş yol!", completed: "✅ Çatdınız", cancelled: S.ride && S.ride.cancelledBy === "driver" ? "Sürücü sifarişi ləğv etdi" : "Sifariş ləğv olundu", no_driver: "Yaxınlıqda boş sürücü tapılmadı" }[b];
   if (msg) { toast(msg, 3500); sysNotify(msg); }
 }
