@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "BakuGo Taksi",
-  "short_name": "BakuGo Taksi",
+  "name": "YouTaxi",
+  "short_name": "YouTaxi",
   "description": "Bakıda premium taksi: bir toxunuşla sifariş, sabit qiymət, canlı izləmə.",
   "lang": "az",
   "dir": "ltr",
@@ -9,8 +9,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#04100F",
-  "theme_color": "#05100F",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFC20E",
   "categories": ["travel", "navigation"],
   "prefer_related_applications": false,
   "icons": [
